@@ -1,0 +1,1499 @@
+<script>
+    tailwind.config = {
+        theme: {
+            extend: {
+                fontFamily: {
+                    sans: ['Inter', 'sans-serif'],
+                    arabic: ['Amiri', 'serif'],
+                },
+                colors: {
+                    brand: {
+                        pink: '#fdf2f8', // rose-50
+                        pinkMain: '#ec4899', // pink-500
+                        pinkDark: '#be185d', // pink-700
+                        green: '#10b981', // emerald-500
+                        greenDark: '#047857', // emerald-700
+                    }
+                },
+                animation: {
+                    'float': 'float 3s ease-in-out infinite',
+                    'fade-in': 'fadeIn 0.5s ease-out forwards',
+                    'slide-up': 'slideUp 0.5s ease-out forwards',
+                    'spin-slow': 'spin 12s linear infinite',
+                    'petal-fall': 'petalFall 7s linear infinite',
+                },
+                keyframes: {
+                    float: {
+                        '0%, 100%': { transform: 'translateY(0)' },
+                        '50%': { transform: 'translateY(-10px)' },
+                    },
+                    fadeIn: {
+                        '0%': { opacity: '0' },
+                        '100%': { opacity: '1' },
+                    },
+                    slideUp: {
+                        '0%': { opacity: '0', transform: 'translateY(20px)' },
+                        '100%': { opacity: '1', transform: 'translateY(0)' },
+                    },
+                    petalFall: {
+                        '0%': { transform: 'translateY(-20px) rotate(0deg)', opacity: '0.8' },
+                        '100%': { transform: 'translateY(600px) rotate(360deg)', opacity: '0' }
+                    }
+                }
+            }
+        }
+    }
+</script>
+<style>
+    body {
+        background: linear-gradient(135deg, #fdf2f8 0%, #fce7f3 50%, #d1fae5 100%);
+        min-height: 100vh;
+        overflow-x: hidden;
+    }
+    .glass-panel {
+        background: rgba(255, 255, 255, 0.88);
+        backdrop-filter: blur(14px);
+        -webkit-backdrop-filter: blur(14px);
+        border: 1px solid rgba(255, 255, 255, 0.6);
+        box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.12);
+    }
+    .hide-scroll::-webkit-scrollbar { display: none; }
+    .hide-scroll { -ms-overflow-style: none; scrollbar-width: none; }
+    
+    .tap-item.selected {
+        border-color: #ec4899;
+        background-color: #fce7f3;
+        transform: scale(0.98);
+    }
+    .drop-zone.active {
+        border-color: #10b981;
+        background-color: #d1fae5;
+    }
+
+    .petals-container {
+        position: absolute;
+        inset: 0;
+        pointer-events: none;
+        overflow: hidden;
+        z-index: 5;
+    }
+
+    @media print {
+        body { background: white; }
+        .no-print { display: none !important; }
+        .glass-panel { box-shadow: none; border: 1px solid #ccc; background: white; }
+    }
+</style>
+
+
+<!-- APP CONTAINER -->
+<div id="app" class="w-full max-w-5xl mx-auto h-[95vh] md:h-[90vh] glass-panel rounded-3xl relative overflow-hidden flex flex-col shadow-2xl">
+
+    <!-- ANIMATED FLOATING FLOWER PETALS OVERLAY -->
+    <div class="petals-container">
+        <svg class="absolute top-2 left-4 w-6 h-6 text-pink-300 opacity-60 animate-petal-fall" style="animation-duration: 9s; animation-delay: 0s;" viewBox="0 0 24 24" fill="currentColor">
+            <path d="M12,2A10,10 0 0,0 2,12A10,10 0 0,0 12,22A10,10 0 0,0 22,12A10,10 0 0,0 12,2M12,4A8,8 0 0,1 20,12A8,8 0 0,1 12,20A8,8 0 0,1 4,12A8,8 0 0,1 12,4M12,6A6,6 0 0,0 6,12A6,6 0 0,0 12,18A6,6 0 0,0 18,12A6,6 0 0,0 12,6Z"/>
+        </svg>
+        <svg class="absolute top-0 right-16 w-8 h-8 text-pink-400 opacity-50 animate-petal-fall" style="animation-duration: 7s; animation-delay: 2s;" viewBox="0 0 24 24" fill="currentColor">
+            <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 17.93c-3.95-.49-7-3.85-7-7.93 0-.62.08-1.21.21-1.79L9 15v1c0 1.1.9 2 2 2v1.93zm6.9-2.54c-.26-.81-1-1.39-1.9-1.39h-1v-3c0-.55-.45-1-1-1H8v-2h2c.55 0 1-.45 1-1V7h2c1.1 0 2-.9 2-2v-.41c2.93 1.19 5 4.06 5 7.41 0 2.08-.8 3.97-2.1 5.39z"/>
+        </svg>
+        <svg class="absolute top-4 left-1/3 w-5 h-5 text-emerald-300 opacity-70 animate-petal-fall" style="animation-duration: 11s; animation-delay: 4s;" viewBox="0 0 24 24" fill="currentColor">
+            <circle cx="12" cy="12" r="8"/>
+        </svg>
+        <svg class="absolute top-0 right-1/3 w-7 h-7 text-pink-300 opacity-60 animate-petal-fall" style="animation-duration: 8s; animation-delay: 1s;" viewBox="0 0 24 24" fill="currentColor">
+            <path d="M12 3c-4.97 0-9 4.03-9 9 0 2.12.74 4.07 1.97 5.61L4.35 21l3.52-.64C9.37 20.73 10.64 21 12 21c4.97 0 9-4.03 9-9s-4.03-9-9-9z"/>
+        </svg>
+    </div>
+
+    <!-- 1. SPLASH SCREEN -->
+    <div id="screen-splash" class="absolute inset-0 z-50 flex flex-col items-center justify-center bg-brand-pink text-brand-pinkDark transition-opacity duration-500">
+        <div class="relative mb-6">
+            <i class="fas fa-microscope text-6xl md:text-8xl animate-float text-brand-pinkMain relative z-10"></i>
+            <i class="fas fa-sun absolute -top-4 -right-4 text-3xl text-yellow-400 animate-spin-slow"></i>
+        </div>
+        <h1 class="text-3xl md:text-4xl font-bold tracking-tight text-center px-4">Eksplorasi<br>Teks LHO</h1>
+        <p class="text-xs font-semibold text-brand-greenDark mt-2 tracking-widest uppercase">Berbasis Kurikulum Berbasis Cinta (KBC)</p>
+        <div class="mt-6 w-16 h-1 bg-brand-pinkMain rounded-full animate-pulse"></div>
+    </div>
+
+    <!-- 2. COVER SCREEN -->
+    <div id="screen-cover" class="hidden absolute inset-0 z-40 flex flex-col items-center justify-center p-6 bg-cover bg-center" style="background-image: url('data:image/svg+xml,%3Csvg width=\'100%25\' height=\'100%25\' xmlns=\'http://www.w3.org/2000/svg\'%3E%3Cdefs%3E%3Cpattern id=\'dots\' x=\'0\' y=\'0\' width=\'20\' height=\'20\' patternUnits=\'userSpaceOnUse\'%3E%3Ccircle fill=\'%23ec4899\' fill-opacity=\'0.1\' cx=\'10\' cy=\'10\' r=\'2\'%3E%3C/circle%3E%3C/pattern%3E%3C/defs%3E%3Crect x=\'0\' y=\'0\' width=\'100%25\' height=\'100%25\' fill=\'url(%23dots)\'%3E%3C/rect%3E%3C/svg%3E');">
+        
+        <div class="text-center animate-slide-up w-full max-w-md">
+            <span class="inline-block py-1 px-3 rounded-full bg-brand-green/20 text-brand-greenDark text-sm font-semibold mb-4 border border-brand-green/30">
+                <i class="fas fa-book-open mr-1"></i> Bahasa Indonesia - Kelas X / Fase E
+            </span>
+            <h1 class="text-4xl md:text-5xl font-bold text-gray-900 mb-6 drop-shadow-sm leading-tight">
+                Teks Laporan <br><span class="text-brand-pinkMain">Hasil Observasi</span>
+            </h1>
+            
+            <div class="w-48 h-48 mx-auto mb-6 animate-float relative">
+                <svg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg" class="w-full h-full">
+                    <circle cx="100" cy="100" r="90" fill="#fdf2f8" stroke="#ec4899" stroke-width="4"/>
+                    <path d="M60 140 L100 60 L140 140 Z" fill="#10b981" opacity="0.8"/>
+                    <circle cx="100" cy="100" r="30" fill="#ec4899" opacity="0.5"/>
+                    <g transform="translate(100,60)">
+                        <circle cx="0" cy="-12" r="8" fill="#f472b6"/>
+                        <circle cx="12" cy="0" r="8" fill="#f472b6"/>
+                        <circle cx="0" cy="12" r="8" fill="#f472b6"/>
+                        <circle cx="-12" cy="0" r="8" fill="#f472b6"/>
+                        <circle cx="0" cy="0" r="7" fill="#fef08a"/>
+                    </g>
+                    <rect x="85" y="110" width="30" height="40" fill="#047857"/>
+                    <path d="M40 100 Q 100 40 160 100" stroke="#be185d" stroke-width="3" fill="none" stroke-dasharray="5,5"/>
+                </svg>
+            </div>
+
+            <div class="flex flex-col space-y-3">
+                <button onclick="app.showModal('modal-info')" class="w-full py-3 bg-white text-gray-700 font-semibold rounded-xl shadow-sm border border-gray-200 hover:bg-pink-50 transition flex items-center justify-center">
+                    <i class="fas fa-user-circle mr-2 text-brand-pinkMain"></i> Informasi Pengembang
+                </button>
+                <button onclick="app.showModal('modal-tujuan')" class="w-full py-3 bg-white text-gray-700 font-semibold rounded-xl shadow-sm border border-gray-200 hover:bg-emerald-50 transition flex items-center justify-center">
+                    <i class="fas fa-bullseye mr-2 text-brand-green"></i> Tujuan Pembelajaran
+                </button>
+                <button onclick="app.navigate('form')" class="w-full py-4 bg-gradient-to-r from-brand-pinkMain to-brand-pinkDark text-white font-bold rounded-xl shadow-lg hover:shadow-xl transform hover:-translate-y-1 transition text-lg mt-2 flex items-center justify-center">
+                    MULAI BELAJAR <i class="fas fa-arrow-right ml-2"></i>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 3. FORM INPUT SISWA -->
+    <div id="screen-form" class="hidden absolute inset-0 z-30 flex flex-col items-center justify-center p-6 glass-panel">
+        <div class="w-full max-w-md bg-white/95 p-8 rounded-2xl shadow-xl animate-slide-up border border-pink-100 relative">
+            <i class="fas fa-spa text-pink-300 text-3xl absolute top-3 right-3 animate-spin-slow"></i>
+            <div class="text-center mb-6">
+                <div class="w-16 h-16 bg-brand-pink rounded-full flex items-center justify-center mx-auto mb-3">
+                    <i class="fas fa-user-graduate text-2xl text-brand-pinkMain"></i>
+                </div>
+                <h2 class="text-2xl font-bold text-gray-800">Identitas Siswa</h2>
+                <p class="text-sm text-gray-500">Silakan isi data diri untuk memulai</p>
+            </div>
+            <form id="loginForm" onsubmit="app.submitForm(event)">
+                <div class="mb-4">
+                    <label class="block text-sm font-semibold text-gray-700 mb-1">Nama Lengkap</label>
+                    <input type="text" id="inputName" required class="w-full px-4 py-3 rounded-xl border border-gray-300 focus:ring-2 focus:ring-brand-pinkMain focus:border-brand-pinkMain outline-none transition" placeholder="Masukkan nama lengkap...">
+                </div>
+                <div class="mb-6">
+                    <label class="block text-sm font-semibold text-gray-700 mb-1">Kelas</label>
+                    <select id="inputClass" required class="w-full px-4 py-3 rounded-xl border border-gray-300 focus:ring-2 focus:ring-brand-pinkMain focus:border-brand-pinkMain outline-none transition">
+                        <option value="">-- Pilih Kelas --</option>
+                        <option value="X-1">X - 1</option>
+                        <option value="X-2">X - 2</option>
+                        <option value="X-3">X - 3</option>
+                        <option value="X-4">X - 4</option>
+                    </select>
+                </div>
+                <button type="submit" class="w-full py-3 bg-brand-pinkMain text-white font-bold rounded-xl shadow-md hover:bg-brand-pinkDark transition flex justify-center items-center">
+                    Lanjutkan <i class="fas fa-sign-in-alt ml-2"></i>
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <!-- 4. PENGANTAR & PANDUAN (SLIDER) -->
+    <div id="screen-guide" class="hidden absolute inset-0 z-30 flex flex-col bg-white">
+        <div class="flex-1 overflow-hidden relative">
+            <div id="guide-slides" class="flex w-full h-full transition-transform duration-500 ease-in-out">
+                <div class="min-w-full h-full flex flex-col justify-center items-center p-8 text-center">
+                    <div class="relative mb-6">
+                        <img src="https://placehold.co/200x200/ec4899/ffffff?text=Ahlan+wa+Sahlan" class="w-40 h-40 rounded-full shadow-lg object-cover" onerror="this.src='data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIxMDAiIGhlaWdodD0iMTAwIj48cmVjdCB3aWR0aD0iMTAwIiBoZWlnaHQ9IjEwMCIgZmlsbD0iI2VjNDg5OSIvPjwvc3ZnPg=='">
+                        <i class="fas fa-seedling text-2xl text-emerald-500 absolute bottom-0 right-0 bg-white p-2 rounded-full shadow"></i>
+                    </div>
+                    <h2 class="text-3xl font-bold text-gray-800 mb-2">Ahlan wa Sahlan!</h2>
+                    <h3 class="text-xl text-brand-pinkMain font-semibold mb-4" id="guide-name">Selamat Datang, Siswa!</h3>
+                    <p class="text-gray-600 max-w-md">Di aplikasi ini, kita akan menjelajahi alam ciptaan Allah melalui Teks Laporan Hasil Observasi dengan mengeksplorasi kekayaan alam Gorontalo.</p>
+                </div>
+                <div class="min-w-full h-full flex flex-col justify-center items-center p-8 text-center">
+                    <i class="fas fa-lock-open text-5xl text-brand-green mb-6"></i>
+                    <h2 class="text-2xl font-bold text-gray-800 mb-4">Sistem Terkunci Bertahap</h2>
+                    <p class="text-gray-600 max-w-md">Belajar itu butuh proses. Selesaikan menu <b>BELAJAR</b> untuk membuka menu <b>BERMAIN</b>, lalu selesaikan tantangan untuk membuka menu <b>BERLATIH</b> dan <b>REFERENSI</b>.</p>
+                </div>
+                <div class="min-w-full h-full flex flex-col justify-center items-center p-8 text-center">
+                    <i class="fas fa-heart text-5xl text-brand-pinkMain mb-6"></i>
+                    <h2 class="text-2xl font-bold text-gray-800 mb-4">Belajar Berbasis Cinta</h2>
+                    <p class="text-gray-600 max-w-md">Resapi nilai cinta kepada Sang Pencipta, alam semesta, dan sesama melalui observasi yang jujur, objektif, dan faktual.</p>
+                </div>
+            </div>
+        </div>
+        <div class="h-24 bg-gray-50 border-t border-gray-200 flex items-center justify-between px-6">
+            <button id="btn-guide-prev" onclick="app.guidePrev()" class="px-4 py-2 text-gray-500 hidden font-semibold"><i class="fas fa-chevron-left mr-1"></i> Kembali</button>
+            <div class="flex space-x-2" id="guide-dots">
+                <div class="w-2 h-2 rounded-full bg-brand-pinkMain"></div>
+                <div class="w-2 h-2 rounded-full bg-gray-300"></div>
+                <div class="w-2 h-2 rounded-full bg-gray-300"></div>
+            </div>
+            <button id="btn-guide-next" onclick="app.guideNext()" class="px-6 py-2 bg-brand-pinkMain text-white rounded-lg font-semibold shadow-md">Lanjut <i class="fas fa-chevron-right ml-1"></i></button>
+        </div>
+    </div>
+
+    <!-- 5. MAIN DASHBOARD -->
+    <div id="screen-dashboard" class="hidden flex-1 flex flex-col w-full h-full bg-slate-50 relative">
+        <div class="bg-white px-6 py-4 border-b shadow-sm flex justify-between items-center z-10 shrink-0">
+            <div class="flex items-center space-x-3">
+                <div class="w-10 h-10 bg-gradient-to-br from-brand-pinkMain to-brand-green rounded-full flex items-center justify-center text-white font-bold text-lg" id="dash-initial">S</div>
+                <div>
+                    <h3 class="font-bold text-gray-800 leading-tight" id="dash-name">Nama Siswa</h3>
+                    <p class="text-xs text-gray-500" id="dash-class">Kelas X</p>
+                </div>
+            </div>
+            <div class="text-right hidden md:block">
+                <span class="text-xs font-semibold text-brand-pinkMain bg-pink-50 px-3 py-1.5 rounded-full border border-pink-200">
+                    <i class="fas fa-leaf text-emerald-500 mr-1"></i> Misi: Teks LHO (KBC)
+                </span>
+            </div>
+        </div>
+
+        <div class="flex-1 overflow-y-auto p-6 md:p-10 hide-scroll">
+            <div class="flex items-center justify-center space-x-2 mb-6">
+                <i class="fas fa-spa text-brand-pinkMain animate-spin-slow"></i>
+                <h2 class="text-2xl font-bold text-gray-800 text-center">Peta Perjalanan Belajar</h2>
+                <i class="fas fa-spa text-brand-pinkMain animate-spin-slow"></i>
+            </div>
+            
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 max-w-5xl mx-auto">
+                
+                <div onclick="app.openMenu('belajar')" class="cursor-pointer group relative bg-white rounded-2xl p-6 border-2 border-brand-pinkMain shadow-lg hover:shadow-xl transition transform hover:-translate-y-1 text-center overflow-hidden">
+                    <div class="absolute top-0 right-0 bg-brand-pinkMain text-white text-[10px] font-bold px-2.5 py-1 rounded-bl-lg">TERBUKA</div>
+                    <div class="w-16 h-16 mx-auto bg-pink-100 rounded-full flex items-center justify-center mb-4 group-hover:scale-110 transition duration-300">
+                        <i class="fas fa-book-reader text-2xl text-brand-pinkMain"></i>
+                    </div>
+                    <h3 class="text-lg font-bold text-gray-800 mb-2">1. Belajar</h3>
+                    <p class="text-xs text-gray-600">Eksplorasi konsep, struktur, & kaidah LHO berbalut nilai keislaman.</p>
+                    <div class="w-full bg-gray-200 h-2 mt-4 rounded-full overflow-hidden">
+                        <div id="progress-belajar" class="bg-brand-pinkMain h-full w-0 transition-all duration-500"></div>
+                    </div>
+                </div>
+
+                <div id="card-bermain" onclick="app.openMenu('bermain')" class="cursor-pointer group relative bg-gray-50 rounded-2xl p-6 border-2 border-gray-200 shadow opacity-70 hover:opacity-100 transition text-center">
+                    <div id="badge-bermain" class="absolute top-0 right-0 bg-gray-400 text-white text-[10px] font-bold px-2.5 py-1 rounded-bl-lg"><i class="fas fa-lock text-[9px] mr-1"></i> TERKUNCI</div>
+                    <div class="w-16 h-16 mx-auto bg-gray-200 rounded-full flex items-center justify-center mb-4">
+                        <i class="fas fa-gamepad text-2xl text-gray-500" id="icon-bermain"></i>
+                    </div>
+                    <h3 class="text-lg font-bold text-gray-800 mb-2">2. Bermain</h3>
+                    <p class="text-xs text-gray-600">Tantangan literasi & numerasi interaktif melatih nalar kritis.</p>
+                </div>
+
+                <div id="card-berlatih" onclick="app.openMenu('berlatih')" class="cursor-pointer group relative bg-gray-50 rounded-2xl p-6 border-2 border-gray-200 shadow opacity-70 hover:opacity-100 transition text-center">
+                    <div id="badge-berlatih" class="absolute top-0 right-0 bg-gray-400 text-white text-[10px] font-bold px-2.5 py-1 rounded-bl-lg"><i class="fas fa-lock text-[9px] mr-1"></i> TERKUNCI</div>
+                    <div class="w-16 h-16 mx-auto bg-gray-200 rounded-full flex items-center justify-center mb-4">
+                        <i class="fas fa-pen-alt text-2xl text-gray-500" id="icon-berlatih"></i>
+                    </div>
+                    <h3 class="text-lg font-bold text-gray-800 mb-2">3. Berlatih</h3>
+                    <p class="text-xs text-gray-600">Mini Game Asesmen + Uji Soal HOTS & cetak rapor belajarmu.</p>
+                </div>
+
+                <div id="card-referensi" onclick="app.openMenu('referensi')" class="cursor-pointer group relative bg-white rounded-2xl p-6 border-2 border-amber-400 shadow hover:shadow-xl transition transform hover:-translate-y-1 text-center">
+                    <div class="absolute top-0 right-0 bg-amber-500 text-white text-[10px] font-bold px-2.5 py-1 rounded-bl-lg">UMUM</div>
+                    <div class="w-16 h-16 mx-auto bg-amber-100 rounded-full flex items-center justify-center mb-4 group-hover:scale-110 transition duration-300">
+                        <i class="fas fa-bookmark text-2xl text-amber-600"></i>
+                    </div>
+                    <h3 class="text-lg font-bold text-gray-800 mb-2">4. Referensi</h3>
+                    <p class="text-xs text-gray-600">Buku Kemendikdasmen & Sumber Aset AI Gemini.</p>
+                </div>
+
+                <div id="card-evaluasi" onclick="app.openMenu('evaluasi')" class="cursor-pointer group relative bg-white rounded-2xl p-6 border-2 border-teal-500 shadow hover:shadow-xl transition transform hover:-translate-y-1 text-center sm:col-span-2 lg:col-span-1">
+                    <div class="absolute top-0 right-0 bg-teal-600 text-white text-[10px] font-bold px-2.5 py-1 rounded-bl-lg">GURU & REKAP</div>
+                    <div class="w-16 h-16 mx-auto bg-teal-100 rounded-full flex items-center justify-center mb-4 group-hover:scale-110 transition duration-300">
+                        <i class="fas fa-chart-bar text-2xl text-teal-600"></i>
+                    </div>
+                    <h3 class="text-lg font-bold text-gray-800 mb-2">5. Rekap Evaluasi</h3>
+                    <p class="text-xs text-gray-600">Laporan evaluasi belajar siswa, statistik nilai, & rekapitulasi kelas.</p>
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+    <!-- 6. LAYER BELAJAR (MATERI) -->
+    <div id="screen-belajar" class="hidden flex-1 flex flex-col w-full h-full bg-white relative z-20">
+        <div class="bg-brand-pinkMain text-white px-4 py-3 flex justify-between items-center shadow-md shrink-0">
+            <button onclick="app.navigate('dashboard')" class="text-white hover:bg-white/20 p-2 rounded-lg"><i class="fas fa-arrow-left"></i> Menu</button>
+            <h2 class="font-bold flex items-center"><i class="fas fa-flower-tulip mr-2"></i> Materi LHO</h2>
+            <div class="text-sm font-semibold bg-white/20 px-3 py-1 rounded-full"><span id="belajar-counter">1</span> / 7</div>
+        </div>
+        
+        <div class="flex-1 overflow-y-auto p-4 md:p-8 bg-slate-50 hide-scroll" id="belajar-content-area"></div>
+
+        <div class="bg-white border-t p-4 flex justify-between items-center shrink-0">
+            <button id="btn-materi-prev" onclick="app.materiPrev()" class="px-4 py-2 text-gray-600 font-semibold rounded hover:bg-gray-100 disabled:opacity-50"><i class="fas fa-chevron-left mr-1"></i> Sebelumnya</button>
+            <button id="btn-materi-next" onclick="app.materiNext()" class="px-6 py-2 bg-brand-green text-white font-bold rounded-lg shadow disabled:opacity-50 disabled:bg-gray-400 transition" disabled>Selesaikan Kuis Dulu <i class="fas fa-lock ml-1 text-xs"></i></button>
+        </div>
+    </div>
+
+    <!-- 7. LAYER BERMAIN (GAMES) -->
+    <div id="screen-bermain" class="hidden flex-1 flex flex-col w-full h-full bg-indigo-50 relative z-20">
+         <div class="bg-indigo-600 text-white px-4 py-3 flex justify-between items-center shadow-md shrink-0">
+            <button onclick="app.navigate('dashboard')" class="text-white hover:bg-white/20 p-2 rounded-lg"><i class="fas fa-home"></i></button>
+            <h2 class="font-bold">Tantangan Bermain</h2>
+            <div class="text-sm font-semibold bg-white/20 px-3 py-1 rounded-full"><span id="bermain-counter">1</span> / 10</div>
+        </div>
+        <div class="flex-1 overflow-y-auto p-4 md:p-6 hide-scroll" id="bermain-content-area"></div>
+    </div>
+
+    <!-- 8. LAYER BERLATIH (GAME ASESMEN + QUIZ) -->
+    <div id="screen-berlatih" class="hidden flex-1 flex flex-col w-full h-full bg-emerald-50 relative z-20">
+         <div class="bg-brand-greenDark text-white px-4 py-3 flex justify-between items-center shadow-md shrink-0">
+            <button onclick="app.navigate('dashboard')" class="text-white hover:bg-white/20 p-2 rounded-lg"><i class="fas fa-home"></i> Menu</button>
+            <h2 class="font-bold flex items-center"><i class="fas fa-gamepad mr-2"></i> Asesmen & Uji Kompetensi</h2>
+            <div class="text-sm font-semibold bg-white/20 px-3 py-1 rounded-full">Tahap <span id="berlatih-counter">Game</span></div>
+        </div>
+
+        <div class="flex-1 overflow-y-auto p-4 md:p-6 hide-scroll relative" id="berlatih-content-area"></div>
+    </div>
+
+    <!-- 9. MENU REFERENSI -->
+    <div id="screen-referensi" class="hidden flex-1 flex flex-col w-full h-full bg-slate-100 relative z-20">
+        <div class="bg-amber-600 text-white px-4 py-3 flex justify-between items-center shadow-md shrink-0">
+            <button onclick="app.navigate('dashboard')" class="text-white hover:bg-white/20 p-2 rounded-lg"><i class="fas fa-arrow-left"></i> Menu Utama</button>
+            <h2 class="font-bold flex items-center"><i class="fas fa-book-open mr-2"></i> Referensi & Atribusi</h2>
+            <div></div>
+        </div>
+
+        <div class="flex-1 overflow-y-auto p-6 md:p-8 hide-scroll space-y-6 max-w-4xl mx-auto w-full">
+            <div class="bg-white rounded-2xl p-6 shadow-md border-l-8 border-blue-500 flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+                <div class="flex items-start space-x-4">
+                    <div class="w-14 h-14 bg-blue-100 rounded-xl flex items-center justify-center text-blue-600 text-2xl font-bold shrink-0">
+                        <i class="fas fa-book"></i>
+                    </div>
+                    <div>
+                        <span class="text-xs font-bold text-blue-600 bg-blue-50 px-2 py-0.5 rounded">Kemendikdasmen RI</span>
+                        <h3 class="text-lg font-bold text-gray-800 mt-1">Buku Siswa Bahasa Indonesia Kelas X Fase E</h3>
+                        <p class="text-sm text-gray-600 mt-1">Buku Teks Utama Kurikulum Merdeka untuk jenjang SMA/MA Kelas X yang diterbitkan oleh Kementerian Pendidikan Dasar dan Menengah (Kemendikdasmen) / Kemendikbudristek.</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="bg-white rounded-2xl p-6 shadow-md border-l-8 border-emerald-500 flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+                <div class="flex items-start space-x-4">
+                    <div class="w-14 h-14 bg-emerald-100 rounded-xl flex items-center justify-center text-emerald-600 text-2xl font-bold shrink-0">
+                        <i class="fas fa-chalkboard-teacher"></i>
+                    </div>
+                    <div>
+                        <span class="text-xs font-bold text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded">Kemendikdasmen RI</span>
+                        <h3 class="text-lg font-bold text-gray-800 mt-1">Buku Panduan Guru Mata Pelajaran Bahasa Indonesia</h3>
+                        <p class="text-sm text-gray-600 mt-1">Buku panduan pendidik Kurikulum Merdeka Fase E Kemendikdasmen sebagai acuan alur tujuan pembelajaran, asesmen HOTS, serta penguatan karakter profil pelajar Pancasila & KBC.</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="bg-white rounded-2xl p-6 shadow-md border-l-8 border-pink-500 flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+                <div class="flex items-start space-x-4">
+                    <div class="w-14 h-14 bg-pink-100 rounded-xl flex items-center justify-center text-pink-600 text-2xl font-bold shrink-0">
+                        <i class="fas fa-code"></i>
+                    </div>
+                    <div>
+                        <span class="text-xs font-bold text-pink-600 bg-pink-50 px-2 py-0.5 rounded">Generative AI Asset</span>
+                        <h3 class="text-lg font-bold text-gray-800 mt-1">Aset Gambar & Vektor SVG HTML</h3>
+                        <p class="text-sm text-gray-600 mt-1">Seluruh ilustrasi visual SVG, elemen animasi bunga, dan kode aplikasi HTML/CSS/JS dalam media interaktif ini dikembangkan secara otomatis menggunakan pertolongan <b>Gemini AI</b>.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 10. REKAP EVALUASI SISWA / DASHBOARD GURU -->
+    <div id="screen-evaluasi" class="hidden flex-1 flex flex-col w-full h-full bg-slate-100 relative z-20">
+        <div class="bg-teal-700 text-white px-4 py-3 flex justify-between items-center shadow-md shrink-0 no-print">
+            <button onclick="app.navigate('dashboard')" class="text-white hover:bg-white/20 p-2 rounded-lg"><i class="fas fa-arrow-left"></i> Menu Utama</button>
+            <h2 class="font-bold flex items-center"><i class="fas fa-chart-line mr-2"></i> Laporan Hasil Evaluasi Siswa</h2>
+            <button onclick="app.downloadRekapPDF()" class="bg-emerald-500 hover:bg-emerald-600 text-white px-3 py-1.5 rounded-lg text-sm font-bold shadow transition"><i class="fas fa-print mr-1"></i> Cetak Rekap</button>
+        </div>
+
+        <div class="flex-1 overflow-y-auto p-4 md:p-6 hide-scroll space-y-6 max-w-5xl mx-auto w-full" id="rekap-container">
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+                <div class="bg-white p-4 rounded-xl shadow-sm border border-slate-200 text-center">
+                    <p class="text-xs font-bold text-slate-500 uppercase">Total Siswa Selesai</p>
+                    <h3 class="text-3xl font-extrabold text-teal-600 mt-1" id="stat-total-siswa">0</h3>
+                    <p class="text-[10px] text-slate-400 mt-1">Peserta Evaluasi</p>
+                </div>
+                <div class="bg-white p-4 rounded-xl shadow-sm border border-slate-200 text-center">
+                    <p class="text-xs font-bold text-slate-500 uppercase">Rata-Rata Nilai</p>
+                    <h3 class="text-3xl font-extrabold text-blue-600 mt-1" id="stat-avg-score">0</h3>
+                    <p class="text-[10px] text-slate-400 mt-1">Skor Akhir Evaluasi</p>
+                </div>
+                <div class="bg-white p-4 rounded-xl shadow-sm border border-slate-200 text-center">
+                    <p class="text-xs font-bold text-slate-500 uppercase">Ketuntasan (KKM 75)</p>
+                    <h3 class="text-3xl font-extrabold text-emerald-600 mt-1" id="stat-tuntas-pct">0%</h3>
+                    <p class="text-[10px] text-slate-400 mt-1">Tuntas Kriteria Minimum</p>
+                </div>
+                <div class="bg-white p-4 rounded-xl shadow-sm border border-slate-200 text-center">
+                    <p class="text-xs font-bold text-slate-500 uppercase">Nilai HOTS Tertinggi</p>
+                    <h3 class="text-3xl font-extrabold text-pink-600 mt-1" id="stat-max-score">0</h3>
+                    <p class="text-[10px] text-slate-400 mt-1">Pencapaian Maksimal</p>
+                </div>
+            </div>
+
+            <div class="bg-white p-4 rounded-xl shadow-sm border border-slate-200 flex flex-col md:flex-row items-center justify-between gap-4 no-print">
+                <div class="flex items-center space-x-2 w-full md:w-auto">
+                    <label class="text-xs font-bold text-gray-600">Filter Kelas:</label>
+                    <select id="filter-kelas" onchange="app.renderRekapTable()" class="px-3 py-1.5 border rounded-lg text-sm bg-slate-50 focus:outline-none focus:ring-2 focus:ring-teal-500">
+                        <option value="ALL">Semua Kelas</option>
+                        <option value="X-1">Kelas X-1</option>
+                        <option value="X-2">Kelas X-2</option>
+                        <option value="X-3">Kelas X-3</option>
+                        <option value="X-4">Kelas X-4</option>
+                    </select>
+                </div>
+                <div class="w-full md:w-72 relative">
+                    <i class="fas fa-search absolute left-3 top-2.5 text-gray-400 text-sm"></i>
+                    <input type="text" id="search-siswa" onkeyup="app.renderRekapTable()" placeholder="Cari nama siswa..." class="w-full pl-9 pr-3 py-1.5 border rounded-lg text-sm bg-slate-50 focus:outline-none focus:ring-2 focus:ring-teal-500">
+                </div>
+            </div>
+
+            <div id="rekap-pdf-content" class="bg-white p-6 rounded-xl shadow-md border border-slate-200">
+                <div class="border-b pb-4 mb-4 flex items-center justify-between">
+                    <div>
+                        <h3 class="text-xl font-bold text-gray-800">Daftar Nilai Evaluasi Teks LHO</h3>
+                        <p class="text-xs text-gray-500">Mata Pelajaran Bahasa Indonesia Kelas X (Fase E) — MAN 1 Boalemo</p>
+                    </div>
+                    <span class="text-xs bg-teal-100 text-teal-800 font-bold px-3 py-1 rounded-full border border-teal-200">Kurikulum Berbasis Cinta</span>
+                </div>
+
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left border-collapse text-sm">
+                        <thead>
+                            <tr class="bg-slate-100 text-slate-700 uppercase text-[11px] font-bold tracking-wider">
+                                <th class="p-3 border">No</th>
+                                <th class="p-3 border">Nama Siswa</th>
+                                <th class="p-3 border text-center">Kelas</th>
+                                <th class="p-3 border text-center">Akurasi Literasi</th>
+                                <th class="p-3 border text-center">Game Asesmen</th>
+                                <th class="p-3 border text-center">Soal HOTS</th>
+                                <th class="p-3 border text-center">Nilai Akhir</th>
+                                <th class="p-3 border text-center">Status</th>
+                            </tr>
+                        </thead>
+                        <tbody id="rekap-table-body" class="divide-y divide-slate-200"></tbody>
+                    </table>
+                </div>
+
+                <div class="mt-6 pt-4 border-t flex justify-between items-center text-xs text-gray-500">
+                    <p>* KKM Mata Pelajaran Bahasa Indonesia adalah <b>75</b>.</p>
+                    <p>Dicetak secara otomatis oleh Aplikasi MPI Teks LHO</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 11. LAPORAN HASIL BELAJAR INDIVIDUAL -->
+    <div id="screen-report" class="hidden flex-1 flex flex-col w-full h-full bg-white relative z-30">
+        <div class="bg-gray-800 text-white px-4 py-3 flex justify-between items-center shadow-md shrink-0 no-print">
+            <button onclick="app.navigate('dashboard')" class="text-white hover:bg-white/20 p-2 rounded-lg"><i class="fas fa-home"></i> Beranda</button>
+            <button onclick="app.downloadPDF()" class="bg-brand-pinkMain hover:bg-brand-pinkDark px-4 py-2 rounded-lg font-bold transition"><i class="fas fa-file-pdf mr-1"></i> Unduh PDF</button>
+        </div>
+        
+        <div class="flex-1 overflow-y-auto p-6 md:p-8 bg-gray-100 hide-scroll" id="report-container">
+            <div id="pdf-content" class="bg-white p-8 max-w-3xl mx-auto shadow-lg relative">
+                <div class="border-b-4 border-gray-800 pb-4 mb-6 flex items-center space-x-4">
+                    <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/f/f2/Lambang_Kementerian_Agama.svg/200px-Lambang_Kementerian_Agama.svg.png" alt="Logo Kemenag" class="w-16 h-16 object-contain">
+                    <div class="flex-1 text-center">
+                        <h2 class="text-xl font-bold uppercase tracking-wider">Kementerian Agama Republik Indonesia</h2>
+                        <h3 class="text-lg font-bold">MAN 1 BOALEMO</h3>
+                        <p class="text-sm text-gray-600">Laporan Hasil Belajar Media Pembelajaran Interaktif (MPI)</p>
+                    </div>
+                </div>
+                
+                <h2 class="text-2xl font-bold text-center mb-6 text-gray-800 border-b pb-2">Rapor Evaluasi Topik: Teks LHO</h2>
+
+                <div class="grid grid-cols-2 gap-4 mb-8 bg-gray-50 p-4 border rounded-lg">
+                    <div><span class="font-semibold text-gray-600 text-sm block">Nama Lengkap</span> <span id="rep-name" class="text-lg font-bold"></span></div>
+                    <div><span class="font-semibold text-gray-600 text-sm block">Kelas / Fase</span> <span id="rep-class" class="text-lg font-bold"></span> / E</div>
+                    <div><span class="font-semibold text-gray-600 text-sm block">Mata Pelajaran</span> <span class="text-lg font-bold">Bahasa Indonesia</span></div>
+                    <div><span class="font-semibold text-gray-600 text-sm block">Tanggal Selesai</span> <span id="rep-date" class="text-lg font-bold"></span></div>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
+                    <div class="border rounded-xl p-4 text-center bg-indigo-50 border-indigo-200">
+                        <h4 class="font-bold text-indigo-800 text-sm mb-1">Akurasi Bermain</h4>
+                        <div class="text-4xl font-extrabold text-indigo-600 mb-1" id="rep-game-score">0%</div>
+                        <p class="text-xs text-indigo-700">Tantangan Literasi</p>
+                    </div>
+                    <div class="border rounded-xl p-4 text-center bg-amber-50 border-amber-200">
+                        <h4 class="font-bold text-amber-800 text-sm mb-1">Mini Game Asesmen</h4>
+                        <div class="text-4xl font-extrabold text-amber-600 mb-1" id="rep-minigame-score">0</div>
+                        <p class="text-xs text-amber-700">Tangkap Kata Faktual</p>
+                    </div>
+                    <div class="border rounded-xl p-4 text-center bg-emerald-50 border-emerald-200 relative overflow-hidden">
+                        <h4 class="font-bold text-emerald-800 text-sm mb-1">Nilai Akhir Soal</h4>
+                        <div class="text-4xl font-extrabold text-emerald-600 mb-1" id="rep-quiz-score">0</div>
+                        <div class="absolute -right-4 -bottom-4 text-emerald-500/20 text-6xl"><i class="fas fa-medal"></i></div>
+                    </div>
+                </div>
+
+                <div class="mb-8">
+                    <h4 class="font-bold text-gray-800 mb-3 border-l-4 border-brand-pinkMain pl-2">Rincian Penguasaan Kompetensi</h4>
+                    <table class="w-full text-left border-collapse">
+                        <thead>
+                            <tr class="bg-gray-100 text-gray-700 text-sm">
+                                <th class="p-2 border">Level Kognitif</th>
+                                <th class="p-2 border text-center">Soal Benar</th>
+                                <th class="p-2 border text-center">Status</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td class="p-2 border font-medium">Level 1 (Dasar/Pemahaman)</td>
+                                <td class="p-2 border text-center" id="rep-l1">0/3</td>
+                                <td class="p-2 border text-center" id="rep-s1">-</td>
+                            </tr>
+                            <tr>
+                                <td class="p-2 border font-medium">Level 2 (Penerapan/Analisis)</td>
+                                <td class="p-2 border text-center" id="rep-l2">0/4</td>
+                                <td class="p-2 border text-center" id="rep-s2">-</td>
+                            </tr>
+                            <tr>
+                                <td class="p-2 border font-medium">Level 3 (HOTS/Penalaran Kritis)</td>
+                                <td class="p-2 border text-center" id="rep-l3">0/3</td>
+                                <td class="p-2 border text-center" id="rep-s3">-</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <div class="bg-pink-50 p-4 border border-pink-200 rounded-lg mb-8">
+                    <h4 class="font-bold text-brand-pinkDark mb-1"><i class="fas fa-heart text-brand-pinkMain mr-2"></i>Catatan Kurikulum Berbasis Cinta (KBC)</h4>
+                    <p class="text-sm text-gray-700 italic text-justify">"Murid telah menunjukkan kemampuan mengobservasi ciptaan Allah dengan akal kritis. Teruslah kembangkan rasa cinta terhadap lingkungan sekitar, khususnya kekayaan alam Gorontalo, sebagai wujud syukur (tafakkur alam) sesuai pedoman Al-Qur'an."</p>
+                </div>
+
+                <div class="flex justify-end mt-12 text-center">
+                    <div>
+                        <p class="text-sm text-gray-600 mb-16">Pengembang / Guru Mata Pelajaran</p>
+                        <p class="font-bold text-gray-800 underline">Yulinda Elfriyanti, S.Pd.</p>
+                        <p class="text-xs text-gray-500">NIP. -</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ================= MODALS ================= -->
+    <div id="modal-overlay" class="hidden absolute inset-0 z-50 bg-gray-900/60 backdrop-blur-sm flex items-center justify-center p-4 transition-opacity">
+        
+        <div id="modal-info" class="hidden modal-content bg-white rounded-2xl shadow-2xl w-full max-w-sm overflow-hidden animate-slide-up border border-gray-200">
+            <div class="bg-gradient-to-r from-brand-pinkMain to-brand-pinkDark h-24 relative">
+                <div class="absolute -bottom-10 left-1/2 transform -translate-x-1/2 w-24 h-24 rounded-full border-4 border-white bg-white shadow-lg overflow-hidden">
+                    <img src="https://freeimage.host/i/nv4Dl2V" alt="Yulinda Elfriyanti" class="w-full h-full object-cover" onerror="this.src='https://ui-avatars.com/api/?name=Yulinda+Elfriyanti&background=ec4899&color=fff&size=128'">
+                </div>
+            </div>
+            <div class="pt-14 pb-6 px-6 text-center">
+                <h3 class="text-xl font-bold text-gray-900 mb-1">Yulinda Elfriyanti, S.Pd.</h3>
+                <p class="text-sm font-semibold text-brand-pinkMain mb-4"><i class="fas fa-school mr-1"></i> MAN 1 Boalemo</p>
+                <div class="bg-gray-50 rounded-lg p-3 text-sm text-gray-600 text-left space-y-2 mb-6 border">
+                    <p><i class="fas fa-envelope text-gray-400 w-5"></i> yulindaelfryanti1998@gmail.com</p>
+                    <p><i class="fas fa-map-marker-alt text-gray-400 w-5"></i> Provinsi Gorontalo</p>
+                    <p><i class="fas fa-chalkboard-teacher text-gray-400 w-5"></i> Pengembang MPI KBC</p>
+                </div>
+                <button onclick="app.closeModal()" class="w-full py-2 bg-gray-100 text-gray-700 font-semibold rounded-lg hover:bg-gray-200 transition">Kembali ke Cover</button>
+            </div>
+        </div>
+
+        <div id="modal-tujuan" class="hidden modal-content bg-white rounded-2xl shadow-2xl w-full max-w-lg overflow-hidden animate-slide-up border border-gray-200">
+            <div class="p-6">
+                <div class="flex items-center space-x-3 mb-4 border-b pb-3">
+                    <div class="w-10 h-10 bg-brand-green/20 rounded-full flex items-center justify-center text-brand-greenDark"><i class="fas fa-bullseye text-xl"></i></div>
+                    <h3 class="text-xl font-bold text-gray-800">Tujuan Pembelajaran</h3>
+                </div>
+                <div class="bg-emerald-50 border-l-4 border-brand-green p-4 rounded-r-lg mb-4">
+                    <p class="text-gray-700 text-sm leading-relaxed text-justify">
+                        Murid mampu <b>mengevaluasi informasi faktual</b> dalam teks laporan hasil observasi agar dapat <b>menyusun dan menyajikan laporan secara objektif</b> sebagai wujud <b>cinta ilmu dan cinta lingkungan.</b>
+                    </p>
+                </div>
+                
+                <div class="mb-6 p-4 bg-gray-50 rounded-lg border border-gray-200">
+                     <div class="font-arabic text-2xl text-right text-gray-800 leading-loose mb-2" dir="rtl">
+                        أَفَلَا يَنْظُرُونَ إِلَى الْإِبِلِ كَيْفَ خُلِقَتْ
+                    </div>
+                    <p class="text-xs text-gray-500 mb-1">QS. Al-Ghashiyah : 17</p>
+                    <p class="text-sm text-gray-600 italic">"Maka tidakkah mereka memperhatikan unta, bagaimana diciptakan?"</p>
+                    <p class="text-xs text-brand-pinkMain mt-2 font-semibold">Spirit KBC: Agama mengajarkan kita untuk mengobservasi alam (bertafakkur) guna menumbuhkan cinta kepada Sang Pencipta.</p>
+                </div>
+                <button onclick="app.closeModal()" class="w-full py-2 bg-gray-800 text-white font-semibold rounded-lg hover:bg-gray-900 transition">Tutup</button>
+            </div>
+        </div>
+
+        <div id="modal-alert" class="hidden modal-content bg-white rounded-xl shadow-2xl w-full max-w-sm p-6 text-center animate-slide-up">
+            <div id="alert-icon" class="text-4xl mb-4 text-brand-pinkMain"><i class="fas fa-exclamation-circle"></i></div>
+            <h3 id="alert-title" class="text-xl font-bold text-gray-800 mb-2">Peringatan</h3>
+            <p id="alert-message" class="text-gray-600 mb-6 text-sm">Pesan alert di sini.</p>
+            <button onclick="app.closeModal()" class="px-6 py-2 bg-brand-pinkMain text-white rounded-lg font-bold shadow hover:bg-brand-pinkDark">Mengerti</button>
+        </div>
+    </div>
+
+</div>
+
+<!-- MAIN JAVASCRIPT LOGIC WITH GAS INTEGRATION -->
+<script>
+    // =========================================================================
+    // DEKLARASI KONSTANTA URL GOOGLE APPS SCRIPT (GAS)
+    // Ganti string di bawah ini dengan Web App Executable URL Anda
+    // =========================================================================
+    const GAS_URL = "https://script.google.com/macros/s/AKfycbx3X4eZvRQArf0D2nScQmyPgusp4JneD28fQWlCHGhSOC-qK8c8UCCCdUQOd040OLfW/exec";
+
+    const app = {
+        // STATE
+        user: { name: '', class: '', date: '' },
+        progress: { 
+            belajar: 0,
+            bermainUnlocked: false,
+            bermainFinished: false,
+            berlatihUnlocked: false,
+            berlatihFinished: false
+        },
+        scores: { bermain: 0, minigame: 0, berlatih: { l1: 0, l2: 0, l3: 0, total: 0 } },
+        currentSlide: { guide: 0, belajar: 0, bermain: 0, berlatih: 'game' },
+        userAnswersHistory: [], // Untuk pencatatan analitis jawaban siswa
+        
+        evaluasiList: [
+            { id: 1, name: "Ahmad Fauzi", class: "X-1", bermain: 90, minigame: 30, quiz: 88, status: "Tuntas" },
+            { id: 2, name: "Siti Nurhaliza", class: "X-1", bermain: 100, minigame: 30, quiz: 94, status: "Tuntas" },
+            { id: 3, name: "Rahmat Dani", class: "X-2", bermain: 70, minigame: 20, quiz: 68, status: "Belum Tuntas" }
+        ],
+
+        data: {
+            belajar: [
+                {
+                    title: "1. Pengertian Teks LHO & Tafakkur Alam",
+                    content: `<p class="mb-3 text-justify">Teks Laporan Hasil Observasi (LHO) adalah teks yang memberikan informasi secara umum, faktual, dan objektif tentang suatu objek berdasarkan hasil pengamatan langsung. Dalam Islam, proses observasi alam sangat dianjurkan dan dikenal dengan istilah <b>Tafakkur</b>.</p>
+                              <div class="my-4 p-4 bg-white rounded-lg border shadow-sm">
+                                  <div class="font-arabic text-2xl text-right leading-loose mb-2 text-brand-greenDark">وَفِي الْأَرْضِ آيَاتٌ لِلْمُوقِنِينَ * وَفِي أَنْفُسِكُمْ ۚ أَفَلَا تُبْصِرُونَ</div>
+                                  <p class="text-xs font-bold text-gray-500">QS. Az-Zariyat: 20-21</p>
+                                  <p class="text-sm italic text-gray-600">"Dan di bumi itu terdapat tanda-tanda (kekuasaan Allah) bagi orang-orang yang yakin, dan (juga) pada dirimu sendiri. Maka apakah kamu tidak memperhatikan?"</p>
+                              </div>
+                              <p class="text-sm text-brand-pinkDark font-semibold bg-pink-50 p-2 rounded"><i class="fas fa-heart mr-1"></i> Nilai KBC: Melalui teks LHO, kita belajar menyajikan fakta ciptaan Allah secara jujur untuk menumbuhkan rasa cinta pada lingkungan.</p>`,
+                    quiz: { q: "Apa kaitan utama antara menyusun teks LHO dengan nilai ajaran Islam berdasarkan materi di atas?", options: ["A. Sekadar untuk mengumpulkan tugas sekolah.", "B. Wujud syukur dan tafakkur atas tanda kekuasaan Allah di alam.", "C. Mengubah fakta alam agar terlihat lebih indah."], answer: 1 }
+                },
+                {
+                    title: "2. Ciri-Ciri Teks LHO",
+                    content: `<p class="mb-3 text-justify">Teks LHO memiliki tiga ciri utama: <b>Faktual</b> (berdasarkan kenyataan), <b>Objektif</b> (tanpa opini/keberpihakan penulis), dan <b>Sistematis</b> (berurutan logis).</p>
+                              <p class="mb-3 text-justify">Mari kita lihat objek observasi lokal di Gorontalo: <b>Danau Limboto</b>. Jika kita mengamati danau ini, kita tidak boleh menulis "Danau Limboto sangat jelek karena surut", melainkan menulis faktanya: "Luas Danau Limboto mengalami penyusutan dari 3.000 hektare menjadi sekitar 2.500 hektare akibat sedimentasi."</p>
+                              <p class="text-sm text-brand-pinkDark font-semibold bg-pink-50 p-2 rounded"><i class="fas fa-leaf mr-1"></i> Cinta Lingkungan: Menyajikan data objektif kerusakan alam (seperti sedimentasi danau) mendorong kita untuk peduli dan bertindak menyelamatkannya.</p>`,
+                    quiz: { q: "Manakah kalimat di bawah ini yang mencerminkan ciri objektif dan faktual tentang ekosistem Gorontalo?", options: ["A. Saya rasa hiu paus di Botubarani sangat lucu dan menggemaskan.", "B. Hiu paus (Rhincodon typus) di perairan Botubarani memiliki panjang rata-rata 4-6 meter.", "C. Menurut saya, cuaca di Teluk Tomini selalu panas setiap hari."], answer: 1 }
+                },
+                {
+                    title: "3. Struktur LHO: Pernyataan Umum (Klasifikasi)",
+                    content: `<p class="mb-3 text-justify">Struktur pertama LHO adalah <b>Pernyataan Umum</b> atau Klasifikasi. Bagian ini berisi pembuka atau pengantar tentang hal yang akan dilaporkan. Biasanya memuat definisi umum (menggunakan kata <i>adalah, merupakan, yaitu</i>) dan pengelompokan objek.</p>
+                              <div class="bg-gray-100 p-3 rounded-lg border-l-4 border-blue-500 mb-3 text-sm">
+                                  <b>Contoh Konteks Lokal:</b><br>
+                                  "Burung Maleo (<i>Macrocephalon maleo</i>) merupakan satwa endemik Pulau Sulawesi yang dapat ditemukan di kawasan Taman Nasional Nani Wartabone, Gorontalo. Satwa ini termasuk dalam keluarga Megapodiidae, yaitu burung yang tidak mengerami telurnya sendiri."
+                              </div>`,
+                    quiz: { q: "Apa fungsi utama dari bagian 'Pernyataan Umum' pada contoh paragraf Burung Maleo di atas?", options: ["A. Menjelaskan rincian fisik burung secara detail.", "B. Memberikan kesimpulan manfaat burung tersebut.", "C. Memberikan definisi dan pengelompokan umum objek observasi."], answer: 2 }
+                },
+                {
+                    title: "4. Struktur LHO: Deskripsi Bagian",
+                    content: `<p class="mb-3 text-justify">Struktur kedua adalah <b>Deskripsi Bagian</b>. Bagian ini berisi perincian detail mengenai objek yang diobservasi. Jika mengobservasi hewan, dijelaskan ciri fisik, habitat, makanan, dan perilaku. Jika mengobservasi tumbuhan, dijelaskan akar, batang, daun, hingga buahnya.</p>
+                              <div class="bg-gray-100 p-3 rounded-lg border-l-4 border-green-500 mb-3 text-sm">
+                                  <b>Contoh Deskripsi Jagung (Binthe) Gorontalo:</b><br>
+                                  "Tanaman jagung lokal Gorontalo memiliki batang yang tegak dan kokoh dengan ketinggian mencapai 2 meter. Daunnya memanjang dengan permukaan yang sedikit kasar. Tongkol jagung dilindungi oleh kelobot berlapis, dengan biji berwarna kuning cerah yang kaya akan karbohidrat."
+                              </div>`,
+                    quiz: { q: "Informasi apa yang disajikan dalam paragraf contoh 'Deskripsi Jagung' di atas?", options: ["A. Rincian fisik batang, daun, dan biji jagung.", "B. Pengertian umum tanaman jagung.", "C. Manfaat jagung untuk perekonomian Gorontalo."], answer: 0 }
+                },
+                {
+                    title: "5. Struktur LHO: Deskripsi Manfaat / Simpulan",
+                    content: `<p class="mb-3 text-justify">Struktur terakhir adalah <b>Deskripsi Manfaat</b>. Bagian ini menunjukkan bahwa setiap objek yang diamati memiliki manfaat atau fungsi dalam kehidupan. Ini selaras dengan pandangan Islam bahwa Allah tidak menciptakan sesuatu dengan sia-sia.</p>
+                              <div class="my-3 p-3 bg-white rounded border shadow-sm">
+                                  <div class="font-arabic text-xl text-right leading-loose mb-1 text-gray-700">رَبَّنَا مَا خَلَقْتَ هَٰذَا بَاطِلًا سُبْحَانَكَ</div>
+                                  <p class="text-xs italic text-gray-500">"Ya Tuhan kami, tiadalah Engkau menciptakan ini dengan sia-sia, Maha Suci Engkau..." (QS. Ali 'Imran: 191)</p>
+                              </div>
+                              <p class="text-sm text-gray-700 text-justify">Contoh: Keberadaan terumbu karang di Teluk Tomini bukan hanya indah dipandang, tetapi bermanfaat sebagai pemecah ombak alami dan rumah bagi ribuan spesies ikan pelagis.</p>`,
+                    quiz: { q: "Berdasarkan QS. Ali 'Imran: 191, sikap apa yang tercermin saat kita menulis bagian 'Deskripsi Manfaat'?", options: ["A. Menganggap objek observasi hanya sebagai bahan tulisan.", "B. Meyakini bahwa setiap ciptaan Allah di alam memiliki hikmah dan fungsi.", "C. Menyimpulkan bahwa alam harus dieksploitasi sepenuhnya."], answer: 1 }
+                },
+                {
+                    title: "6. Kaidah Kebahasaan: Kata Benda & Kopula",
+                    content: `<p class="mb-3 text-justify">Teks LHO sangat bergantung pada penggunaan: <br>
+                              1. <b>Nomina (Kata Benda):</b> Merujuk pada objek (contoh: <i>pantai, burung, hutan, pesisir</i>).<br>
+                              2. <b>Kata Kerja Kopula:</b> Kata kerja yang menghubungkan subjek dengan pelengkap, sangat sering muncul di Pernyataan Umum. Contoh kata: <b>adalah, merupakan, yaitu, yakni.</b></p>
+                              <p class="text-sm bg-blue-50 p-2 rounded border border-blue-100 mb-3">Analisis Kalimat: "Binthe Biluhuta <b>merupakan</b> makanan khas Gorontalo berbahan dasar jagung." Kata 'merupakan' adalah kopula penegas definisi.</p>`,
+                    quiz: { q: "Manakah kalimat di bawah ini yang menggunakan kata kerja KOPULA dengan tepat?", options: ["A. Nelayan Gorontalo menangkap ikan tuna di laut lepas.", "B. Taman Laut Olele adalah surga tersembunyi bagi para penyelam.", "C. Pemerintah daerah melestarikan burung maleo dari kepunahan."], answer: 1 }
+                },
+                {
+                    title: "7. Menyusun LHO yang Objektif & Berakhlak",
+                    content: `<p class="mb-3 text-justify">Menyusun Teks LHO bukan sekadar menulis, melainkan mempraktikkan akhlak kejujuran ilmiah (tabayyun). Langkahnya: (1) Tentukan objek, (2) Lakukan observasi ke lapangan mencatat data angka/fakta riil, (3) Susun kerangka (Umum-Bagian-Manfaat), (4) Kembangkan paragraf tanpa menambahkan opini bohong (hoaks).</p>
+                              <p class="text-sm text-brand-pinkDark font-semibold bg-pink-50 p-2 rounded"><i class="fas fa-handshake mr-1"></i> Cinta Tanah Air & Sesama: Dengan menyajikan data LHO yang jujur tentang kekayaan Gorontalo, kita mempromosikan daerah kita dengan baik dan mencegah misinformasi di masyarakat.</p>`,
+                    quiz: { q: "Sikap apa yang harus dihindari oleh seorang penulis LHO agar laporannya sesuai dengan prinsip akhlak kejujuran ilmiah?", options: ["A. Menggunakan data hasil ukur dan literatur terpercaya.", "B. Memasukkan opini pribadi dan melebih-lebihkan fakta tanpa bukti (hoaks).", "C. Memeriksa ulang (tabayyun) data yang diperoleh dari lapangan."], answer: 1 }
+                }
+            ],
+            bermain: [
+                { type: 'mc', stimulus: "Teluk Tomini, yang membentang luas di selatan Provinsi Gorontalo, merupakan salah satu teluk terbesar di Indonesia. Kawasan pesisir ini tidak hanya menjadi jalur pelayaran strategis, tetapi juga menyimpan kekayaan biodiversitas laut yang menakjubkan. Nelayan lokal sangat bergantung pada hasil tangkapan ikan pelagis seperti cakalang dan tuna. Namun, akhir-akhir ini, kebiasaan membuang sampah plastik ke laut mulai mengancam kelestarian terumbu karang yang berfungsi sebagai rumah alami ikan-ikan tersebut. Dalam ajaran Islam, menjaga kelestarian alam adalah bagian dari amanah manusia sebagai khalifah di bumi.", q: "Berdasarkan stimulus di atas, fenomena sosial-ekologis apa yang menjadi ancaman objek observasi Teluk Tomini yang bertentangan dengan peran manusia sebagai khalifah?", options: ["A. Penangkapan ikan tuna oleh nelayan lokal.", "B. Jalur pelayaran kapal laut yang strategis.", "C. Kebiasaan membuang sampah plastik yang merusak terumbu karang."], answer: 2 },
+                { type: 'match', stimulus: "Dalam menulis teks LHO mengenai satwa liar Gorontalo, penulis harus mampu membedakan struktur teks. Paragraf pertama berbunyi: 'Tarsius (Tarsius spp.) adalah primata mungil endemik Sulawesi yang aktif di malam hari (nokturnal).' Paragraf kedua berbunyi: 'Hewan ini memiliki mata yang sangat besar melebihi volume otaknya, serta kaki belakang yang panjang untuk melompat dari pohon ke pohon.' Paragraf ketiga: 'Keberadaan tarsius berfungsi menjaga keseimbangan ekosistem hutan sebagai pemangsa serangga hama.'", q: "Pasangkan kutipan teks dengan struktur Teks LHO yang tepat dengan cara mengklik kotak kiri lalu kotak kanan!", pairs: [{ left: "Tarsius adalah primata mungil endemik...", right: "Pernyataan Umum" }, { left: "Hewan ini memiliki mata besar dan kaki panjang...", right: "Deskripsi Bagian" }, { left: "Berfungsi menjaga keseimbangan ekosistem...", right: "Deskripsi Manfaat" }] },
+                { type: 'mc', stimulus: "Desa Botubarani di Kabupaten Bone Bolango, Gorontalo, menjadi fenomena langka karena kemunculan Hiu Paus (Rhincodon typus) yang berjarak sangat dekat dengan bibir pantai, yakni sekitar 20 hingga 30 meter saja. Hiu paus ini sering muncul karena kebiasaan nelayan membuang limbah pabrik udang ke laut yang tanpa disadari menjadi pakan mereka. Wisatawan kini berdatangan untuk melihat secara langsung. Namun, interaksi yang terlalu dekat tanpa jarak aman dapat menyebabkan stres pada biota laut raksasa tersebut dan merusak kulit mereka yang sensitif.", q: "Data numerik faktual yang dapat dimasukkan ke dalam teks LHO berdasarkan teks di atas adalah...", options: ["A. Hiu paus sangat lucu jika dilihat dari dekat pantai.", "B. Hiu paus muncul pada jarak 20 hingga 30 meter dari bibir pantai.", "C. Wisatawan yang datang jumlahnya ribuan setiap hari."], answer: 1 },
+                { type: 'order', stimulus: "Seorang siswa MAN 1 Boalemo sedang melakukan observasi tentang komoditas pertanian utama Gorontalo, yaitu Jagung. Ia mencatat langkah-langkah penelitiannya namun catatannya berantakan. Agar laporan hasil observasinya sistematis dan objektif sesuai metode saintifik, ia harus mengurutkan langkah-langkahnya secara logis mulai dari persiapan hingga penulisan hasil akhir.", q: "Urutkan langkah observasi penulisan Teks LHO berikut dari tahap awal (atas) hingga akhir (bawah) dengan mengklik secara berurutan!", options: ["1. Menentukan objek observasi (Lahan Jagung Boalemo).", "2. Melakukan pengamatan langsung dan mencatat data (tinggi batang, warna daun).", "3. Menyusun kerangka teks (Umum, Bagian, Manfaat).", "4. Mengembangkan kerangka menjadi teks LHO yang utuh."] },
+                { type: 'mc', stimulus: "Dalam Al-Qur'an Surah Ar-Rum ayat 41 disebutkan: 'Telah tampak kerusakan di darat dan di laut disebabkan karena perbuatan tangan manusia, supaya Allah merasakan kepada mereka sebahagian dari (akibat) perbuatan mereka, agar mereka kembali (ke jalan yang benar).' Saat siswa mengobservasi kualitas air Danau Limboto yang mulai keruh dipenuhi eceng gondok akibat limbah pertanian, siswa tersebut menyadari kebenaran ayat ini.", q: "Sikap 'Cinta Lingkungan' yang paling tepat sebagai simpulan LHO dari hasil observasi Danau Limboto di atas adalah...", options: ["A. Membiarkan eceng gondok tumbuh karena menyerap polusi dengan baik.", "B. Mengajak masyarakat mengurangi limbah pertanian agar kualitas air danau membaik.", "C. Menuliskan laporan bahwa Danau Limboto sudah tidak bisa diselamatkan lagi."], answer: 1 },
+                { type: 'mc', stimulus: "Teks LHO disusun dengan bahasa yang baku dan memuat istilah teknis atau ilmiah. Di pesisir Gorontalo, terdapat ekosistem mangrove yang luas. Mangrove memiliki akar napas (pneumatofor) yang menyembul dari lumpur. Akar ini berfungsi untuk mengambil oksigen di lingkungan berlumpur yang miskin oksigen (anaerobik). Akar ini juga mengikat sedimen lumpur sehingga mencegah abrasi pantai dari hantaman ombak Teluk Tomini.", q: "Kata teknis (istilah ilmiah) biologi yang terdapat dalam teks stimulus observasi mangrove di atas adalah...", options: ["A. Pesisir, lumpur, ombak", "B. Ekosistem, menyembul, mengikat", "C. Pneumatofor, anaerobik, abrasi"], answer: 2 },
+                { type: 'match', stimulus: "Teks Laporan Hasil Observasi menggunakan kalimat deskripsi untuk merinci ciri objek dan kalimat definisi untuk memberikan batasan pengertian. \n(1) Benteng Otanaha merupakan situs bersejarah peninggalan Raja Ilato di Kota Gorontalo. \n(2) Benteng ini terbuat dari campuran pasir, kapur, dan putih telur burung maleo. \n(3) Pemandangan dari atas benteng sangat memanjakan mata siapa saja yang berkunjung.", q: "Pasangkan nomor kalimat dengan jenis kalimat/kaidahnya (Klik kiri lalu kanan)!", pairs: [{ left: "Kalimat (1)", right: "Kalimat Definisi (Ada Kopula)" }, { left: "Kalimat (2)", right: "Kalimat Deskripsi Faktual" }, { left: "Kalimat (3)", right: "Bukan LHO (Kalimat Opini/Subjektif)" }] },
+                { type: 'mc', stimulus: "Cermati kutipan teks LHO berikut: 'Bunga bangkai (Amorphophallus titanum) adalah tumbuhan endemik Sumatra. Tumbuhan ini memiliki perbungaan terbesar di dunia. Ciri khasnya adalah mengeluarkan bau busuk seperti bangkai yang menyengat. Bau ini berfungsi untuk menarik serangga seperti lalat kumbang (carrion beetles) agar membantu proses penyerbukan.'", q: "Bagian manakah yang menunjukkan 'Deskripsi Manfaat' dari struktur anatomi bunga bangkai tersebut?", options: ["A. Tumbuhan ini memiliki perbungaan terbesar di dunia.", "B. Bau busuk berfungsi menarik serangga untuk membantu penyerbukan.", "C. Bunga bangkai adalah tumbuhan endemik Sumatra."], answer: 1 },
+                { type: 'mc', stimulus: "Dalam Kurikulum Berbasis Cinta, observasi menumbuhkan empati. Bacalah data berikut: Populasi burung Maleo (Macrocephalon maleo) di Taman Nasional Bogani Nani Wartabone terus menurun. Tahun 2010 terdapat sekitar 500 titik peneluran, namun pada 2022 hanya tersisa kurang dari 200 titik aktif. Penurunan ini diakibatkan oleh pencurian telur oleh manusia dan hilangnya habitat akibat perambahan hutan.", q: "Jika Anda menyusun LHO berdasarkan data kuantitatif (angka) di atas, pesan 'Cinta Alam' apa yang tepat dimasukkan ke Deskripsi Manfaat/Simpulan?", options: ["A. Telur maleo memiliki nilai jual tinggi sehingga wajar sering dicuri.", "B. Data penurunan titik peneluran membuktikan perlunya tindakan konservasi tegas untuk melindungi habitat maleo.", "C. Taman Nasional harus ditutup selamanya agar burung maleo bisa bertelur di jalan raya."], answer: 1 },
+                { type: 'mc', stimulus: "Bacalah teks berikut: 'Kerajinan Karawo adalah sulaman khas Gorontalo yang proses pembuatannya membutuhkan ketelitian tinggi. Kain dasar diiris dan dicabut benangnya helai demi helai sesuai pola (karawo mengiris), kemudian sulaman disisipkan pada rongga benang tersebut. Kerajinan ini bukan sekadar seni, melainkan wujud kesabaran masyarakat Gorontalo, mencerminkan nilai Islam tentang keuletan (istiqomah).'", q: "Teks di atas berfokus mengobservasi aspek apa dari budaya Gorontalo?", options: ["A. Sejarah penemuan kain karawo oleh leluhur.", "B. Proses atau metode teknis pembuatan sulaman karawo.", "C. Harga jual kain karawo di pasar modern."], answer: 1 }
+            ],
+            berlatih: [
+                { level: 1, weight: 8, stimulus: "Taman Laut Olele terletak di Kabupaten Bone Bolango, Provinsi Gorontalo. Tempat ini merupakan destinasi wisata bahari unggulan karena memiliki terumbu karang unik yang disebut 'Bunga Karang Salvador Dali' (Petrosia lignosa). Bunga karang raksasa ini memiliki pola ukiran abstrak alami yang tidak ditemukan di laut mana pun di dunia. Kedalamannya berkisar antara 5 hingga 15 meter.", q: "Struktur teks Laporan Hasil Observasi yang dominan pada paragraf di atas adalah...", options: ["A. Deskripsi Manfaat", "B. Deskripsi Bagian", "C. Pernyataan Umum / Klasifikasi", "D. Kesimpulan"], answer: 1 },
+                { level: 1, weight: 8, stimulus: "Kata kopula sering digunakan dalam teks LHO untuk memberikan pengertian. Kalimat: (1) Saronde adalah pulau kecil di perairan Gorontalo Utara. (2) Pulau Saronde memiliki pasir putih halus. (3) Masyarakat pesisir menjaga kebersihan laut. (4) Ikan baronang berkembang biak di sekitar karang.", q: "Kalimat yang menggunakan kata kerja kopula ditunjukkan oleh nomor...", options: ["A. (1)", "B. (2)", "C. (3)", "D. (4)"], answer: 0 },
+                { level: 1, weight: 8, stimulus: "Sebuah teks LHO harus bersifat objektif, artinya informasi yang disajikan sesuai dengan keadaan sebenarnya tanpa dipengaruhi pandangan pribadi. Di dalam Islam, hal ini sejalan dengan sifat 'Siddiq' (benar/jujur).", q: "Manakah dari kalimat berikut yang paling objektif untuk laporan observasi tentang Masjid Agung Baiturrahim Gorontalo?", options: ["A. Menurut saya, Masjid Baiturrahim adalah masjid terindah di dunia.", "B. Saya merasa sangat damai saat berdoa di dalam masjid ini.", "C. Masjid Agung Baiturrahim Gorontalo dibangun pada tahun 1728 oleh Raja Botutihe.", "D. Sebaiknya semua masjid dibangun sebesar Masjid Baiturrahim."], answer: 2 },
+                { level: 2, weight: 10, stimulus: "Data Hasil Observasi Curah Hujan Gorontalo (Oktober 2023): \n- Wilayah Kota Gorontalo: 120 mm/bulan \n- Wilayah Pegunungan Bone Bolango: 250 mm/bulan \n- Suhu rata-rata harian: 32°C. \n- Kondisi tanah agraris: Kering di pesisir, lembap di pegunungan.", q: "Berdasarkan data numerik faktual tersebut, informasi spesifik apa yang paling tepat dituliskan dalam Teks LHO tentang kondisi geografis Bone Bolango?", options: ["A. Bone Bolango memiliki suhu harian sangat dingin di bawah 20°C.", "B. Curah hujan di Bone Bolango lebih tinggi dibandingkan Kota Gorontalo, dengan selisih 130 mm/bulan.", "C. Semua wilayah di Gorontalo memiliki kelembapan tanah yang sama rata.", "D. Curah hujan di Kota Gorontalo mencapai 250 mm/bulan, cocok untuk sawah."], answer: 1 },
+                { level: 2, weight: 10, stimulus: "Bacalah teks berikut: 'Pisang goroho (Musa acuminate L.) adalah jenis pisang lokal khas Sulawesi Utara dan Gorontalo. Pisang ini unik karena biasa dikonsumsi dalam keadaan mentah (belum matang berwarna kuning) dengan cara digoreng tipis atau direbus. Jika dibiarkan matang, teksturnya menjadi lembek dan rasanya agak asam.'", q: "Makna istilah teknis 'Musa acuminate L.' dalam teks tersebut adalah...", options: ["A. Nama panggilan lokal untuk pisang goroho.", "B. Nama latin atau ilmiah yang mengklasifikasikan spesies pisang goroho.", "C. Nama ahli botani yang menemukan pisang goroho pertama kali.", "D. Proses penggorengan pisang mentah secara tradisional."], answer: 1 },
+                { level: 2, weight: 10, stimulus: "Perhatikan kalimat-kalimat yang diacak berikut ini!\n(1) Nutrisi tersebut bermanfaat untuk menjaga kesehatan mata dan pencernaan.\n(2) Jagung (Zea mays ssp. mays) adalah tanaman semusim yang ditanam secara luas di Gorontalo.\n(3) Biji jagung mengandung karbohidrat kompleks, serat, dan vitamin B.\n(4) Tinggi batang jagung bervariasi antara 1,5 hingga 2,5 meter.", q: "Urutan kalimat yang tepat agar menjadi paragraf teks LHO yang padu (Umum -> Deskripsi Bagian -> Manfaat) adalah...", options: ["A. (2) - (4) - (3) - (1)", "B. (2) - (3) - (4) - (1)", "C. (4) - (2) - (1) - (3)", "D. (3) - (1) - (2) - (4)"], answer: 0 },
+                { level: 2, weight: 10, stimulus: "Tafakkur alam (memikirkan penciptaan langit dan bumi) dalam Islam menuntut kita untuk teliti. Saat siswa diminta menyusun laporan observasi tentang masalah sampah di pesisir Teluk Tomini, ia menemukan dua sumber informasi. Sumber A (Jurnal Lingkungan Hidup): 'Konsentrasi mikroplastik di Teluk Tomini mencapai 0,5 partikel/m3'. Sumber B (Postingan Anonim di Medsos): 'Teluk Tomini adalah lautan sampah paling kotor di alam semesta, ikannya beracun semua.'", q: "Sebagai penulis LHO yang mengutamakan tabayyun (cek fakta), sumber mana yang harus ia gunakan dan mengapa?", options: ["A. Sumber B, karena bahasanya lebih bombastis dan menarik pembaca.", "B. Kedua sumber digabung saja agar laporannya panjang.", "C. Sumber A, karena datanya spesifik, terukur, dan berasal dari literatur ilmiah.", "D. Tidak menggunakan keduanya karena teks LHO tidak butuh referensi."], answer: 2 },
+                { level: 3, weight: 12, stimulus: "Sebuah laporan observasi satwa menuliskan: 'Populasi penyu sisik (Eretmochelys imbricata) di Cagar Alam Pulau Mas-Popaya-Raja mengalami ancaman serius. Dari 100 sarang telur yang diamati pada tahun 2021, 60% habis diburu manusia, 20% rusak akibat abrasi ombak, dan hanya 20% yang berhasil menetas menjadi tukik. Penyu sisik memiliki peran ekologis penting dalam memakan spons laut beracun, sehingga terumbu karang dapat tumbuh sehat.'", q: "Berdasarkan data numerik dan deskripsi manfaat di atas, penalaran (HOTS) yang paling logis untuk merumuskan simpulan LHO yang berwawasan 'Cinta Lingkungan' adalah...", options: ["A. Penyu sisik tidak perlu dilindungi karena 20% masih bisa menetas dan ombak adalah faktor alam yang tidak bisa dihindari.", "B. Tindakan pencegahan perburuan manusia harus diprioritaskan (mengatasi faktor 60%) karena berdampak langsung pada kelangsungan terumbu karang.", "C. Manusia sebaiknya membantu penyu memakan spons beracun di laut agar tugas penyu menjadi lebih ringan.", "D. Pulau Mas-Popaya-Raja harus dijual kepada investor untuk dijadikan pelabuhan besar karena penyu akan punah bagaimanapun juga."], answer: 1 },
+                { level: 3, weight: 12, stimulus: "Dalam Al-Qur'an, Allah melarang berbuat kerusakan di bumi (Al-A'raf: 56). Anda mengobservasi sebuah pabrik pengolahan kopra (kelapa) di desa yang limbah cairnya langsung dialirkan ke sungai tanpa disaring. Limbah ini menyebabkan warna air sungai menjadi hitam pekat dan mengeluarkan bau busuk hidrogen sulfida (H2S). Warga sekitar yang menggunakan air sungai untuk mandi mulai terkena penyakit kulit gatal-gatal.", q: "Manakah rumusan kalimat objektif dalam teks LHO yang memiliki daya evaluasi kritis tinggi terhadap masalah lingkungan tersebut?", options: ["A. Saya benci pabrik kopra itu karena membuat sungai desa kami menjadi bau dan warga jadi gatal-gatal.", "B. Limbah cair pabrik kopra terbukti mengubah fisik air sungai (berwarna hitam, bau H2S) dan memicu dampak lanjutan berupa penyakit kulit pada warga sekitar.", "C. Pabrik kopra itu mungkin telah dikutuk sehingga mengeluarkan bau busuk hidrogen sulfida yang menyengat.", "D. Air sungai di desa berubah warna secara ajaib karena reaksi alamiah dengan buah kelapa yang jatuh dari pohon."], answer: 1 },
+                { level: 3, weight: 12, stimulus: "Perhatikan teks berikut!\n(Paragraf 1) Binthe Biluhuta (Milu Siram) adalah sup jagung khas Gorontalo. \n(Paragraf 2) Sup ini terbuat dari jagung pulut pipil, dicampur dengan parutan kelapa, daun bawang, kemangi, dan suwiran ikan cakalang. Kandungan gizi utamanya adalah karbohidrat dari jagung dan protein dari ikan. \n(Paragraf 3) Mengonsumsi binthe biluhuta memberikan energi bagi tubuh nelayan sebelum melaut serta menghangatkan badan saat cuaca dingin.", q: "Seorang siswa mengkritik teks tersebut dengan berkata: 'Teks ini bukan LHO, melainkan teks Prosedur karena membahas makanan.' Evaluasi penalaran siswa tersebut dengan tepat!", options: ["A. Siswa benar, semua teks yang membahas makanan pasti teks Prosedur.", "B. Siswa salah, teks tersebut adalah LHO karena menjabarkan pengertian (umum), rincian bahan dan gizi (bagian), serta khasiatnya (manfaat) tanpa ada langkah-langkah pembuatan.", "C. Siswa benar, paragraf 2 dengan jelas menyebutkan langkah-langkah mencampur jagung dan parutan kelapa.", "D. Siswa salah, teks tersebut adalah teks Narasi karena bercerita tentang nelayan yang makan binthe."], answer: 1 }
+            ]
+        },
+
+        // INITIALIZATION
+        init() {
+            setTimeout(() => {
+                document.getElementById('screen-splash').classList.add('opacity-0');
+                setTimeout(() => {
+                    document.getElementById('screen-splash').classList.add('hidden');
+                    document.getElementById('screen-cover').classList.remove('hidden');
+                }, 500);
+            }, 2000);
+
+            // Kirim Bank Soal ke Google Sheets jika URL valid
+            this.syncBankSoalToGAS();
+        },
+
+        // GOOGLE APPS SCRIPT INTEGRATION METHOD
+        syncBankSoalToGAS() {
+            if (!GAS_URL || GAS_URL.includes("URL_GAS_ANDA_DISINI")) return;
+
+            let formattedSoal = [];
+
+            // Transform Soal Bermain
+            this.data.bermain.forEach((item, idx) => {
+                formattedSoal.push({
+                    menu: "Bermain",
+                    nomor: idx + 1,
+                    kategori: item.type,
+                    stimulus: item.stimulus || "-",
+                    pertanyaan: item.q,
+                    pilihan: item.options ? item.options.join(" | ") : (item.pairs ? JSON.stringify(item.pairs) : "-"),
+                    kunciJawaban: item.answer !== undefined ? item.answer : "-"
+                });
+            });
+
+            // Transform Soal Berlatih (HOTS)
+            this.data.berlatih.forEach((item, idx) => {
+                formattedSoal.push({
+                    menu: "Berlatih",
+                    nomor: idx + 1,
+                    kategori: "Level " + item.level,
+                    stimulus: item.stimulus || "-",
+                    pertanyaan: item.q,
+                    pilihan: item.options.join(" | "),
+                    kunciJawaban: item.answer
+                });
+            });
+
+            fetch(GAS_URL, {
+                method: "POST",
+                headers: { "Content-Type": "text/plain;charset=utf-8" },
+                body: JSON.stringify({
+                    action: "initDataSoal",
+                    soalData: formattedSoal
+                })
+            }).catch(err => console.log("Gas Sync Info:", err));
+        },
+
+        sendResultToGAS(payloadData) {
+            if (!GAS_URL || GAS_URL.includes("URL_GAS_ANDA_DISINI")) return;
+
+            fetch(GAS_URL, {
+                method: "POST",
+                headers: { "Content-Type": "text/plain;charset=utf-8" },
+                body: JSON.stringify({
+                    action: "submitHasil",
+                    payload: payloadData
+                })
+            })
+            .then(res => res.json())
+            .then(data => console.log("Gas Save Result:", data))
+            .catch(err => console.error("Gas Error:", err));
+        },
+
+        navigate(screenId) {
+            ['cover', 'form', 'guide', 'dashboard', 'belajar', 'bermain', 'berlatih', 'referensi', 'evaluasi', 'report'].forEach(id => {
+                const el = document.getElementById(`screen-${id}`);
+                if(el) el.classList.add('hidden');
+            });
+            document.getElementById(`screen-${screenId}`).classList.remove('hidden');
+
+            if(screenId === 'dashboard') this.updateDashboard();
+            if(screenId === 'belajar') this.renderBelajar();
+            if(screenId === 'bermain') this.renderBermain();
+            if(screenId === 'berlatih') this.renderBerlatih();
+            if(screenId === 'evaluasi') this.renderRekapScreen();
+            if(screenId === 'report') this.renderReport();
+        },
+
+        showModal(modalId) {
+            document.getElementById('modal-overlay').classList.remove('hidden');
+            document.querySelectorAll('.modal-content').forEach(el => el.classList.add('hidden'));
+            document.getElementById(modalId).classList.remove('hidden');
+        },
+
+        closeModal() {
+            document.getElementById('modal-overlay').classList.add('hidden');
+        },
+
+        customAlert(title, message) {
+            document.getElementById('alert-title').innerText = title;
+            document.getElementById('alert-message').innerText = message;
+            this.showModal('modal-alert');
+        },
+
+        submitForm(e) {
+            e.preventDefault();
+            const name = document.getElementById('inputName').value.trim();
+            const cls = document.getElementById('inputClass').value;
+            if(!name || !cls) return;
+            
+            this.user.name = name;
+            this.user.class = cls;
+            
+            document.getElementById('guide-name').innerText = `Selamat Datang, ${name}!`;
+            document.getElementById('dash-name').innerText = name;
+            document.getElementById('dash-class').innerText = cls;
+            document.getElementById('dash-initial').innerText = name.charAt(0).toUpperCase();
+            
+            this.navigate('guide');
+            this.updateGuideSlide();
+        },
+
+        // GUIDE SLIDER
+        updateGuideSlide() {
+            const slides = document.getElementById('guide-slides');
+            slides.style.transform = `translateX(-${this.currentSlide.guide * 100}%)`;
+            
+            const dots = document.getElementById('guide-dots').children;
+            for(let i=0; i<dots.length; i++) {
+                dots[i].className = i === this.currentSlide.guide ? "w-2 h-2 rounded-full bg-brand-pinkMain transition-all" : "w-2 h-2 rounded-full bg-gray-300 transition-all";
+            }
+
+            document.getElementById('btn-guide-prev').classList.toggle('hidden', this.currentSlide.guide === 0);
+            const nextBtn = document.getElementById('btn-guide-next');
+            if(this.currentSlide.guide === 2) {
+                nextBtn.innerHTML = 'Mulai Belajar <i class="fas fa-rocket ml-1"></i>';
+                nextBtn.classList.add('bg-brand-green');
+                nextBtn.classList.remove('bg-brand-pinkMain');
+            } else {
+                nextBtn.innerHTML = 'Lanjut <i class="fas fa-chevron-right ml-1"></i>';
+                nextBtn.classList.add('bg-brand-pinkMain');
+                nextBtn.classList.remove('bg-brand-green');
+            }
+        },
+        guideNext() {
+            if(this.currentSlide.guide < 2) {
+                this.currentSlide.guide++;
+                this.updateGuideSlide();
+            } else {
+                this.navigate('dashboard');
+            }
+        },
+        guidePrev() {
+            if(this.currentSlide.guide > 0) {
+                this.currentSlide.guide--;
+                this.updateGuideSlide();
+            }
+        },
+
+        // DASHBOARD
+        updateDashboard() {
+            const pctBelajar = (this.progress.belajar / this.data.belajar.length) * 100;
+            document.getElementById('progress-belajar').style.width = `${pctBelajar}%`;
+
+            const cBermain = document.getElementById('card-bermain');
+            const bBermain = document.getElementById('badge-bermain');
+            const iBermain = document.getElementById('icon-bermain');
+            if(this.progress.bermainUnlocked) {
+                cBermain.classList.remove('bg-gray-50', 'border-gray-200', 'opacity-70');
+                cBermain.classList.add('bg-white', 'border-indigo-500', 'opacity-100', 'hover:-translate-y-1');
+                bBermain.className = 'absolute top-0 right-0 bg-indigo-500 text-white text-[10px] font-bold px-2.5 py-1 rounded-bl-lg';
+                bBermain.innerHTML = 'TERBUKA';
+                iBermain.className = 'fas fa-gamepad text-2xl text-indigo-500';
+                cBermain.querySelector('.bg-gray-200').classList.replace('bg-gray-200', 'bg-indigo-100');
+            }
+
+            const cBerlatih = document.getElementById('card-berlatih');
+            const bBerlatih = document.getElementById('badge-berlatih');
+            const iBerlatih = document.getElementById('icon-berlatih');
+            if(this.progress.berlatihUnlocked) {
+                cBerlatih.classList.remove('bg-gray-50', 'border-gray-200', 'opacity-70');
+                cBerlatih.classList.add('bg-white', 'border-emerald-500', 'opacity-100', 'hover:-translate-y-1');
+                bBerlatih.className = 'absolute top-0 right-0 bg-emerald-500 text-white text-[10px] font-bold px-2.5 py-1 rounded-bl-lg';
+                bBerlatih.innerHTML = 'TERBUKA';
+                iBerlatih.className = 'fas fa-pen-alt text-2xl text-emerald-500';
+                cBerlatih.querySelector('.bg-gray-200').classList.replace('bg-gray-200', 'bg-emerald-100');
+            }
+        },
+
+        openMenu(menu) {
+            if(menu === 'bermain' && !this.progress.bermainUnlocked) {
+                this.customAlert('Terkunci', 'Selesaikan seluruh 7 slide materi di menu BELAJAR terlebih dahulu untuk membuka tantangan bermain.');
+                return;
+            }
+            if(menu === 'berlatih' && !this.progress.berlatihUnlocked) {
+                this.customAlert('Terkunci', 'Selesaikan 10 tantangan di menu BERMAIN terlebih dahulu untuk membuka Asesmen Akhir.');
+                return;
+            }
+            this.navigate(menu);
+        },
+
+        // BELAJAR (MATERI)
+        renderBelajar() {
+            const idx = this.currentSlide.belajar;
+            const data = this.data.belajar[idx];
+            document.getElementById('belajar-counter').innerText = idx + 1;
+            
+            let html = `
+                <div class="bg-white rounded-xl shadow-sm border p-5 md:p-8 mb-6 animate-fadeIn">
+                    <h3 class="text-2xl font-bold text-brand-pinkMain mb-4 border-b-2 border-pink-100 pb-2 flex items-center justify-between">
+                        <span>${data.title}</span>
+                        <i class="fas fa-leaf text-emerald-400 text-xl"></i>
+                    </h3>
+                    <div class="text-gray-700 leading-relaxed mb-8 text-lg">${data.content}</div>
+                    
+                    <div class="bg-indigo-50 border border-indigo-100 rounded-xl p-5" id="belajar-quiz-area">
+                        <h4 class="font-bold text-indigo-800 mb-3"><i class="fas fa-question-circle mr-2"></i> Uji Pemahaman Kilat</h4>
+                        <p class="text-gray-800 font-medium mb-4">${data.quiz.q}</p>
+                        <div class="space-y-2">
+                            ${data.quiz.options.map((opt, i) => `
+                                <button onclick="app.checkBelajarQuiz(${i}, ${data.quiz.answer})" class="w-full text-left p-3 rounded-lg border border-indigo-200 bg-white hover:bg-indigo-100 transition focus:outline-none" id="bq-btn-${i}">${opt}</button>
+                            `).join('')}
+                        </div>
+                        <div id="bq-feedback" class="mt-4 hidden p-3 rounded-lg text-sm font-bold text-center"></div>
+                    </div>
+                </div>
+            `;
+            document.getElementById('belajar-content-area').innerHTML = html;
+            
+            const btnPrev = document.getElementById('btn-materi-prev');
+            const btnNext = document.getElementById('btn-materi-next');
+            btnPrev.disabled = idx === 0;
+            
+            if(this.progress.belajar > idx) {
+                btnNext.disabled = false;
+                btnNext.innerHTML = (idx === 6) ? 'Selesai & Buka Bermain <i class="fas fa-unlock ml-1"></i>' : 'Selanjutnya <i class="fas fa-chevron-right ml-1"></i>';
+                document.getElementById('belajar-quiz-area').classList.add('opacity-50', 'pointer-events-none');
+            } else {
+                btnNext.disabled = true;
+                btnNext.innerHTML = 'Selesaikan Kuis Dulu <i class="fas fa-lock ml-1 text-xs"></i>';
+            }
+        },
+        
+        checkBelajarQuiz(selected, correct) {
+            if(this.progress.belajar > this.currentSlide.belajar) return;
+
+            const btn = document.getElementById(`bq-btn-${selected}`);
+            const feedback = document.getElementById('bq-feedback');
+            
+            if(selected === correct) {
+                btn.classList.replace('bg-white', 'bg-green-500');
+                btn.classList.add('text-white', 'border-green-600');
+                feedback.className = 'mt-4 p-3 rounded-lg text-sm font-bold text-center bg-green-100 text-green-800 animate-slide-up block';
+                feedback.innerHTML = '<i class="fas fa-check-circle mr-1"></i> Jawaban Benar! Anda dapat melanjutkan materi.';
+                
+                const btnNext = document.getElementById('btn-materi-next');
+                btnNext.disabled = false;
+                if(this.currentSlide.belajar === 6) {
+                    btnNext.innerHTML = 'Selesai & Buka Bermain <i class="fas fa-unlock ml-1"></i>';
+                } else {
+                    btnNext.innerHTML = 'Selanjutnya <i class="fas fa-chevron-right ml-1"></i>';
+                }
+                
+                if(this.progress.belajar === this.currentSlide.belajar) {
+                    this.progress.belajar++;
+                }
+
+                document.getElementById('belajar-quiz-area').classList.add('pointer-events-none');
+            } else {
+                btn.classList.replace('bg-white', 'bg-red-500');
+                btn.classList.add('text-white', 'border-red-600');
+                feedback.className = 'mt-4 p-3 rounded-lg text-sm font-bold text-center bg-red-100 text-red-800 animate-slide-up block';
+                feedback.innerHTML = '<i class="fas fa-times-circle mr-1"></i> Jawaban kurang tepat. Coba telaah lagi materinya.';
+                setTimeout(() => {
+                     btn.className = 'w-full text-left p-3 rounded-lg border border-indigo-200 bg-white hover:bg-indigo-100 transition focus:outline-none';
+                     feedback.classList.add('hidden');
+                }, 1500);
+            }
+        },
+
+        materiNext() {
+            if(this.currentSlide.belajar < 6) {
+                this.currentSlide.belajar++;
+                this.renderBelajar();
+            } else {
+                this.progress.bermainUnlocked = true;
+                this.customAlert('Selamat!', 'Anda telah menuntaskan materi LHO. Menu BERMAIN kini telah terbuka. Mari berlatih!');
+                this.navigate('dashboard');
+            }
+        },
+        materiPrev() {
+            if(this.currentSlide.belajar > 0) {
+                this.currentSlide.belajar--;
+                this.renderBelajar();
+            }
+        },
+
+        // BERMAIN (GAMES ENGINE)
+        renderBermain() {
+            const idx = this.currentSlide.bermain;
+            const data = this.data.bermain[idx];
+            document.getElementById('bermain-counter').innerText = idx + 1;
+            
+            let gameHtml = '';
+
+            if(data.type === 'mc') {
+                gameHtml = `
+                    <div class="space-y-3 mt-6">
+                        ${data.options.map((opt, i) => `
+                            <button onclick="app.checkBermain(${i}, ${data.answer})" class="w-full text-left p-4 rounded-xl border-2 border-indigo-200 bg-white hover:bg-indigo-50 transition text-gray-700 font-medium" id="game-btn-${i}">${opt}</button>
+                        `).join('')}
+                    </div>
+                `;
+            } else if(data.type === 'match' || data.type === 'order') {
+                 this.tempPairs = data.type === 'match' ? [...data.pairs] : data.options.map(opt => ({left: opt, right: "Urutan " + (data.options.indexOf(opt)+1)}));
+                 this.shuffledLeft = [...this.tempPairs].sort(() => Math.random() - 0.5);
+                 this.shuffledRight = [...this.tempPairs].sort(() => Math.random() - 0.5);
+                 this.selectedLeft = null;
+                 this.matchedCount = 0;
+
+                 gameHtml = `
+                    <div class="mt-4 bg-yellow-50 text-yellow-800 p-2 rounded text-sm text-center font-bold animate-pulse"><i class="fas fa-hand-pointer mr-1"></i> TAP item di kiri, lalu TAP pasangannya di kanan!</div>
+                    <div class="grid grid-cols-2 gap-4 mt-4">
+                        <div class="space-y-2">
+                            <h5 class="font-bold text-center text-indigo-700 bg-indigo-100 p-2 rounded">Pilihan</h5>
+                            ${this.shuffledLeft.map((item, i) => `
+                                <div id="match-l-${i}" onclick="app.selectMatchLeft(${i})" class="tap-item p-3 bg-white border-2 border-gray-300 rounded cursor-pointer text-sm shadow-sm text-center select-none">${item.left}</div>
+                            `).join('')}
+                        </div>
+                        <div class="space-y-2">
+                            <h5 class="font-bold text-center text-emerald-700 bg-emerald-100 p-2 rounded">Pasangan/Urutan</h5>
+                            ${this.shuffledRight.map((item, i) => `
+                                <div id="match-r-${i}" onclick="app.selectMatchRight(${i})" class="drop-zone p-3 bg-gray-100 border-2 border-dashed border-gray-400 rounded cursor-pointer text-sm font-bold text-center text-gray-500 select-none">${item.right}</div>
+                            `).join('')}
+                        </div>
+                    </div>
+                 `;
+            }
+
+            let html = `
+                <div class="bg-white rounded-xl shadow-lg border-t-4 border-indigo-500 p-5 md:p-8 animate-fadeIn max-w-3xl mx-auto">
+                    <div class="flex items-center space-x-2 text-indigo-600 mb-4 border-b pb-2">
+                        <i class="fas fa-book-open text-xl"></i> <span class="font-bold uppercase tracking-wider text-sm">Stimulus Literasi</span>
+                    </div>
+                    <p class="text-gray-700 leading-relaxed text-justify mb-6 bg-gray-50 p-4 rounded-lg border">${data.stimulus}</p>
+                    
+                    <h4 class="font-bold text-lg text-gray-800 mb-2">${data.q}</h4>
+                    ${gameHtml}
+
+                    <div id="game-feedback" class="mt-6 hidden p-4 rounded-xl text-center font-bold text-lg"></div>
+                    
+                    <div class="mt-6 flex justify-end">
+                        <button id="btn-game-next" onclick="app.gameNext()" class="hidden px-6 py-3 bg-indigo-600 text-white rounded-lg font-bold shadow hover:bg-indigo-700 transition">Soal Berikutnya <i class="fas fa-arrow-right ml-1"></i></button>
+                    </div>
+                </div>
+            `;
+            document.getElementById('bermain-content-area').innerHTML = html;
+        },
+
+        selectMatchLeft(idx) {
+            if(document.getElementById(`match-l-${idx}`).classList.contains('opacity-50')) return;
+            this.shuffledLeft.forEach((_, i) => document.getElementById(`match-l-${i}`).classList.remove('selected'));
+            this.selectedLeft = idx;
+            document.getElementById(`match-l-${idx}`).classList.add('selected');
+        },
+
+        selectMatchRight(idx) {
+            if(this.selectedLeft === null) return;
+            if(document.getElementById(`match-r-${idx}`).classList.contains('bg-green-100')) return;
+
+            const leftItem = this.shuffledLeft[this.selectedLeft];
+            const rightItem = this.shuffledRight[idx];
+
+            if(leftItem.right === rightItem.right) {
+                const lEl = document.getElementById(`match-l-${this.selectedLeft}`);
+                const rEl = document.getElementById(`match-r-${idx}`);
+                
+                lEl.classList.remove('selected');
+                lEl.classList.add('opacity-50', 'bg-gray-100', 'border-gray-200');
+                rEl.classList.replace('bg-gray-100', 'bg-green-100');
+                rEl.classList.replace('border-dashed', 'border-solid');
+                rEl.classList.replace('border-gray-400', 'border-green-500');
+                rEl.classList.add('text-green-800');
+                rEl.innerHTML = `<i class="fas fa-check-circle mr-1"></i> ${rightItem.right}`;
+                
+                this.selectedLeft = null;
+                this.matchedCount++;
+
+                if(this.matchedCount === this.tempPairs.length) {
+                    this.finishBermainItem(true);
+                }
+            } else {
+                const rEl = document.getElementById(`match-r-${idx}`);
+                rEl.classList.add('bg-red-100', 'border-red-500', 'text-red-600');
+                setTimeout(() => {
+                    rEl.classList.remove('bg-red-100', 'border-red-500', 'text-red-600');
+                }, 500);
+            }
+        },
+
+        checkBermain(selected, correct) {
+            this.data.bermain[this.currentSlide.bermain].options.forEach((_, i) => {
+                document.getElementById(`game-btn-${i}`).disabled = true;
+            });
+
+            const btn = document.getElementById(`game-btn-${selected}`);
+            if(selected === correct) {
+                btn.classList.replace('bg-white', 'bg-green-500');
+                btn.classList.add('text-white', 'border-green-600');
+                this.finishBermainItem(true);
+            } else {
+                btn.classList.replace('bg-white', 'bg-red-500');
+                btn.classList.add('text-white', 'border-red-600');
+                document.getElementById(`game-btn-${correct}`).classList.replace('bg-white', 'bg-green-200');
+                this.finishBermainItem(false);
+            }
+        },
+
+        finishBermainItem(isCorrect) {
+            if(isCorrect) this.scores.bermain += 10;
+            
+            const fb = document.getElementById('game-feedback');
+            fb.classList.remove('hidden');
+            if(isCorrect) {
+                fb.className = 'mt-6 p-4 rounded-xl text-center font-bold text-lg bg-green-100 text-green-800 animate-slide-up block';
+                fb.innerHTML = '<i class="fas fa-star text-yellow-500 mr-2"></i> Luar Biasa! Analisis yang tepat.';
+            } else {
+                fb.className = 'mt-6 p-4 rounded-xl text-center font-bold text-lg bg-red-100 text-red-800 animate-slide-up block';
+                fb.innerHTML = '<i class="fas fa-times mr-2"></i> Kurang tepat. Terus asah kemampuan literasimu!';
+            }
+            
+            const btnNext = document.getElementById('btn-game-next');
+            btnNext.classList.remove('hidden');
+            if(this.currentSlide.bermain === 9) {
+                btnNext.innerHTML = 'Selesaikan Bermain <i class="fas fa-flag-checkered ml-1"></i>';
+            }
+        },
+
+        gameNext() {
+            if(this.currentSlide.bermain < 9) {
+                this.currentSlide.bermain++;
+                this.renderBermain();
+            } else {
+                this.progress.berlatihUnlocked = true;
+                this.customAlert('Misi Selesai!', `Skor Bermain Anda: ${this.scores.bermain}%. Menu BERLATIH (Asesmen) telah terbuka.`);
+                this.navigate('dashboard');
+            }
+        },
+
+        // BERLATIH (MINI GAME ASESMEN + QUIZ)
+        renderBerlatih() {
+            if (this.currentSlide.berlatih === 'game') {
+                this.renderAsesmenGame();
+            } else {
+                this.renderQuizItem();
+            }
+        },
+
+        renderAsesmenGame() {
+            document.getElementById('berlatih-counter').innerText = 'Game Asesmen';
+
+            const words = [
+                { text: "Burung Maleo (Fakta)", isFact: true },
+                { text: "Katanya Sangat Indah (Opini)", isFact: false },
+                { text: "Panjang Hiu Paus 5m (Fakta)", isFact: true },
+                { text: "Saya Rasa Sangat Jelek (Opini)", isFact: false },
+                { text: "Luas Danau 2500 Ha (Fakta)", isFact: true },
+                { text: "Mungkin Besok Hujan (Opini)", isFact: false }
+            ];
+
+            let html = `
+                <div class="bg-white rounded-2xl shadow-xl border p-6 max-w-2xl mx-auto text-center animate-fadeIn">
+                    <div class="w-16 h-16 bg-amber-100 rounded-full flex items-center justify-center mx-auto mb-3 text-amber-600 text-3xl">
+                        <i class="fas fa-gamepad"></i>
+                    </div>
+                    <h3 class="text-2xl font-bold text-gray-800 mb-2">Mini Game Asesmen: Tangkap Kata Faktual!</h3>
+                    <p class="text-sm text-gray-600 mb-6">Klik atau tap pada kotak bermuatan <b>FAKTA/DATA OBJEKTIF</b> Teks LHO. Hindari memilih kalimat opini/subjektif!</p>
+                    
+                    <div class="grid grid-cols-2 gap-4 mb-6" id="game-words-grid">
+                        ${words.map((w, i) => `
+                            <button onclick="app.clickFactGame(${i}, ${w.isFact})" id="fg-btn-${i}" class="p-4 bg-slate-50 border-2 border-slate-200 rounded-xl font-bold text-gray-700 hover:border-amber-400 transition shadow-sm">
+                                ${w.text}
+                            </button>
+                        `).join('')}
+                    </div>
+
+                    <div id="fg-score-display" class="bg-amber-50 text-amber-900 font-bold p-3 rounded-lg border border-amber-200 mb-6">
+                        Skor Game Asesmen: <span id="fg-score-val" class="text-2xl text-amber-600">0</span> / 30
+                    </div>
+
+                    <button onclick="app.startQuizFromGame()" id="btn-start-soal" class="w-full py-4 bg-gradient-to-r from-emerald-600 to-teal-700 text-white font-bold rounded-xl shadow-lg hover:shadow-xl transition text-lg flex items-center justify-center">
+                        Lanjut ke Soal Asesmen HOTS (10 Soal) <i class="fas fa-arrow-right ml-2"></i>
+                    </button>
+                </div>
+            `;
+            document.getElementById('berlatih-content-area').innerHTML = html;
+        },
+
+        clickFactGame(idx, isFact) {
+            const btn = document.getElementById(`fg-btn-${idx}`);
+            if (btn.disabled) return;
+
+            btn.disabled = true;
+            if (isFact) {
+                btn.classList.replace('bg-slate-50', 'bg-green-500');
+                btn.classList.add('text-white', 'border-green-600');
+                this.scores.minigame += 10;
+            } else {
+                btn.classList.replace('bg-slate-50', 'bg-red-500');
+                btn.classList.add('text-white', 'border-red-600');
+            }
+            document.getElementById('fg-score-val').innerText = this.scores.minigame;
+        },
+
+        startQuizFromGame() {
+            this.currentSlide.berlatih = 0;
+            this.userAnswersHistory = []; // Reset riwayat pengerjaan
+            this.renderBerlatih();
+        },
+
+        renderQuizItem() {
+            const idx = this.currentSlide.berlatih;
+            const data = this.data.berlatih[idx];
+            document.getElementById('berlatih-counter').innerText = `${idx + 1}/10`;
+            
+            let badgeClass = data.level === 1 ? 'bg-blue-100 text-blue-800 border-blue-200' : 
+                             data.level === 2 ? 'bg-purple-100 text-purple-800 border-purple-200' : 
+                             'bg-red-100 text-red-800 border-red-200';
+            let levelText = data.level === 1 ? 'Level 1: Dasar/Pemahaman' : 
+                            data.level === 2 ? 'Level 2: Aplikasi' : 
+                            'Level 3: HOTS / Penalaran';
+
+            let html = `
+                <div class="bg-white rounded-xl shadow-xl border p-5 md:p-8 animate-fadeIn max-w-3xl mx-auto relative overflow-hidden">
+                    <div class="absolute top-0 right-0 ${badgeClass} border-b border-l px-4 py-1 rounded-bl-xl font-bold text-xs">
+                        ${levelText} | Bobot: ${data.weight}
+                    </div>
+                    
+                    <div class="mt-6 mb-6 p-5 bg-gray-50 border border-gray-200 rounded-xl">
+                        <p class="text-gray-700 leading-relaxed text-justify">${data.stimulus}</p>
+                    </div>
+                    
+                    <h4 class="font-bold text-lg text-gray-900 mb-4">${data.q}</h4>
+                    
+                    <div class="space-y-3">
+                        ${data.options.map((opt, i) => `
+                            <button onclick="app.selectBerlatih(${i})" class="w-full text-left p-4 rounded-xl border-2 border-gray-200 bg-white hover:border-emerald-400 hover:bg-emerald-50 transition text-gray-800" id="quiz-btn-${i}">
+                                <div class="flex items-start">
+                                    <div class="w-6 h-6 rounded-full border-2 border-gray-300 mr-3 flex-shrink-0 flex items-center justify-center font-bold text-xs" id="quiz-rad-${i}">${String.fromCharCode(65+i)}</div>
+                                    <span>${opt.substring(3)}</span>
+                                </div>
+                            </button>
+                        `).join('')}
+                    </div>
+
+                    <div class="mt-8 flex justify-end border-t pt-4">
+                        <button id="btn-quiz-next" onclick="app.quizNext()" class="px-8 py-3 bg-gray-300 text-gray-500 rounded-lg font-bold transition pointer-events-none">Pilih Jawaban Dulu</button>
+                    </div>
+                </div>
+            `;
+            document.getElementById('berlatih-content-area').innerHTML = html;
+            this.tempQuizAnswer = null;
+        },
+
+        selectBerlatih(idx) {
+            this.tempQuizAnswer = idx;
+            
+            this.data.berlatih[this.currentSlide.berlatih].options.forEach((_, i) => {
+                const btn = document.getElementById(`quiz-btn-${i}`);
+                const rad = document.getElementById(`quiz-rad-${i}`);
+                btn.classList.remove('border-emerald-500', 'bg-emerald-50');
+                btn.classList.add('border-gray-200', 'bg-white');
+                rad.classList.remove('border-emerald-500', 'bg-emerald-500', 'text-white');
+                rad.classList.add('border-gray-300', 'text-gray-800');
+            });
+
+            const btn = document.getElementById(`quiz-btn-${idx}`);
+            const rad = document.getElementById(`quiz-rad-${idx}`);
+            btn.classList.replace('border-gray-200', 'border-emerald-500');
+            btn.classList.replace('bg-white', 'bg-emerald-50');
+            rad.classList.replace('border-gray-300', 'border-emerald-500');
+            rad.classList.add('bg-emerald-500', 'text-white');
+
+            const btnNext = document.getElementById('btn-quiz-next');
+            btnNext.classList.remove('bg-gray-300', 'text-gray-500', 'pointer-events-none');
+            btnNext.classList.add('bg-brand-greenDark', 'text-white', 'shadow-lg', 'hover:bg-emerald-800');
+            if(this.currentSlide.berlatih === 9) {
+                btnNext.innerHTML = 'Kirim Jawaban & Lihat Rapor <i class="fas fa-check-circle ml-1"></i>';
+            } else {
+                btnNext.innerHTML = 'Simpan & Lanjut <i class="fas fa-arrow-right ml-1"></i>';
+            }
+        },
+
+        quizNext() {
+            const data = this.data.berlatih[this.currentSlide.berlatih];
+            const isCorrect = (this.tempQuizAnswer === data.answer);
+
+            // Rekam detail jawaban per soal
+            this.userAnswersHistory.push({
+                soalKe: this.currentSlide.berlatih + 1,
+                pilihanSiswa: String.fromCharCode(65 + this.tempQuizAnswer),
+                kunci: String.fromCharCode(65 + data.answer),
+                status: isCorrect ? "BENAR" : "SALAH"
+            });
+
+            if(isCorrect) {
+                this.scores.berlatih.total += data.weight;
+                if(data.level === 1) this.scores.berlatih.l1++;
+                if(data.level === 2) this.scores.berlatih.l2++;
+                if(data.level === 3) this.scores.berlatih.l3++;
+            }
+
+            if(this.currentSlide.berlatih < 9) {
+                this.currentSlide.berlatih++;
+                this.renderBerlatih();
+            } else {
+                const today = new Date();
+                this.user.date = today.toLocaleDateString('id-ID', { year: 'numeric', month: 'long', day: 'numeric' });
+                
+                const countBenar = this.userAnswersHistory.filter(h => h.status === "BENAR").length;
+                const countSalah = 10 - countBenar;
+                const statusKetuntasan = this.scores.berlatih.total >= 75 ? "Tuntas" : "Belum Tuntas";
+
+                const studentData = {
+                    id: this.evaluasiList.length + 1,
+                    name: this.user.name,
+                    class: this.user.class,
+                    bermain: this.scores.bermain,
+                    minigame: this.scores.minigame,
+                    quiz: this.scores.berlatih.total,
+                    status: statusKetuntasan
+                };
+
+                const existingIdx = this.evaluasiList.findIndex(item => item.name.toLowerCase() === this.user.name.toLowerCase());
+                if(existingIdx !== -1) {
+                    this.evaluasiList[existingIdx] = studentData;
+                } else {
+                    this.evaluasiList.push(studentData);
+                }
+
+                // KRUSIAL: Kirim data lengkap pengerjaan ke Google Sheets
+                this.sendResultToGAS({
+                    nama: this.user.name,
+                    kelas: this.user.class,
+                    skorLiterasi: this.scores.bermain,
+                    skorMiniGame: this.scores.minigame,
+                    skorHOTS: this.scores.berlatih.total,
+                    status: statusKetuntasan,
+                    jawabanBenar: countBenar,
+                    jawabanSalah: countSalah,
+                    detailJawaban: this.userAnswersHistory
+                });
+
+                this.navigate('report');
+            }
+        },
+
+        // REKAP EVALUASI SCREEN LOGIC
+        renderRekapScreen() {
+            this.renderRekapTable();
+        },
+
+        renderRekapTable() {
+            const selectedClass = document.getElementById('filter-kelas').value;
+            const searchQuery = document.getElementById('search-siswa').value.toLowerCase();
+
+            let filtered = this.evaluasiList.filter(item => {
+                const matchClass = selectedClass === 'ALL' || item.class === selectedClass;
+                const matchName = item.name.toLowerCase().includes(searchQuery);
+                return matchClass && matchName;
+            });
+
+            const totalSiswa = filtered.length;
+            const avgScore = totalSiswa > 0 ? Math.round(filtered.reduce((acc, curr) => acc + curr.quiz, 0) / totalSiswa) : 0;
+            const tuntasCount = filtered.filter(i => i.status === 'Tuntas').length;
+            const tuntasPct = totalSiswa > 0 ? Math.round((tuntasCount / totalSiswa) * 100) : 0;
+            const maxScore = totalSiswa > 0 ? Math.max(...filtered.map(i => i.quiz)) : 0;
+
+            document.getElementById('stat-total-siswa').innerText = totalSiswa;
+            document.getElementById('stat-avg-score').innerText = avgScore;
+            document.getElementById('stat-tuntas-pct').innerText = `${tuntasPct}%`;
+            document.getElementById('stat-max-score').innerText = maxScore;
+
+            const tbody = document.getElementById('rekap-table-body');
+            if(filtered.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="8" class="p-6 text-center text-gray-400">Tidak ada data hasil evaluasi yang sesuai.</td></tr>`;
+                return;
+            }
+
+            tbody.innerHTML = filtered.map((item, idx) => `
+                <tr class="hover:bg-slate-50 transition">
+                    <td class="p-3 border font-semibold text-center text-slate-500">${idx + 1}</td>
+                    <td class="p-3 border font-bold text-gray-800">${item.name}</td>
+                    <td class="p-3 border text-center font-medium">${item.class}</td>
+                    <td class="p-3 border text-center text-indigo-600 font-semibold">${item.bermain}%</td>
+                    <td class="p-3 border text-center text-amber-600 font-semibold">${item.minigame}/30</td>
+                    <td class="p-3 border text-center font-bold text-slate-800">${item.quiz}</td>
+                    <td class="p-3 border text-center font-extrabold text-teal-700">${item.quiz}</td>
+                    <td class="p-3 border text-center">
+                        <span class="px-2.5 py-1 rounded-full text-xs font-bold ${item.status === 'Tuntas' ? 'bg-emerald-100 text-emerald-800 border border-emerald-300' : 'bg-rose-100 text-rose-800 border border-rose-300'}">
+                            ${item.status}
+                        </span>
+                    </td>
+                </tr>
+            `).join('');
+        },
+
+        downloadRekapPDF() {
+            const element = document.getElementById('rekap-pdf-content');
+            const opt = {
+                margin:       0.4,
+                filename:     `Rekap_Laporan_Evaluasi_Siswa_LHO.pdf`,
+                image:        { type: 'jpeg', quality: 0.98 },
+                html2canvas:  { scale: 2, useCORS: true },
+                jsPDF:        { unit: 'in', format: 'a4', orientation: 'landscape' }
+            };
+            html2pdf().set(opt).from(element).save();
+        },
+
+        // REPORT PDF INDIVIDUAL
+        renderReport() {
+            document.getElementById('rep-name').innerText = this.user.name;
+            document.getElementById('rep-class').innerText = this.user.class;
+            document.getElementById('rep-date').innerText = this.user.date;
+            
+            document.getElementById('rep-game-score').innerText = `${this.scores.bermain}%`;
+            document.getElementById('rep-minigame-score').innerText = `${this.scores.minigame}/30`;
+            document.getElementById('rep-quiz-score').innerText = this.scores.berlatih.total;
+
+            const setLvl = (id, count, max) => {
+                document.getElementById(`rep-l${id}`).innerText = `${count}/${max}`;
+                const statEl = document.getElementById(`rep-s${id}`);
+                if(count === max) { statEl.innerHTML = '<span class="text-green-600 font-bold">Sangat Baik</span>'; }
+                else if(count >= max/2) { statEl.innerHTML = '<span class="text-blue-600 font-bold">Cukup</span>'; }
+                else { statEl.innerHTML = '<span class="text-red-600 font-bold">Perlu Bimbingan</span>'; }
+            };
+            
+            setLvl(1, this.scores.berlatih.l1, 3);
+            setLvl(2, this.scores.berlatih.l2, 4);
+            setLvl(3, this.scores.berlatih.l3, 3);
+        },
+
+        downloadPDF() {
+            const element = document.getElementById('pdf-content');
+            const opt = {
+                margin:       0.5,
+                filename:     `Rapor_LHO_${this.user.name.replace(/\s+/g, '_')}.pdf`,
+                image:        { type: 'jpeg', quality: 0.98 },
+                html2canvas:  { scale: 2, useCORS: true },
+                jsPDF:        { unit: 'in', format: 'a4', orientation: 'portrait' }
+            };
+            html2pdf().set(opt).from(element).save();
+        }
+    };
+
+    window.onload = () => {
+        app.init();
+    };
+</script>
